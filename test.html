@@ -19,19 +19,31 @@
 	app.controller('mapController', function($http, $interval, NgMap) {
 		var vm = this;
 		
-		vm.grabData = function(){
+		vm.grabData = function(date){
         	$http({
         		//url:"http://localhost:8080/SVN_REPOSIBILITY_HTDOCS/SummerProject/homepage.php?f=grab",
         		url:"homepage.php?f=grab",
         		method: 'GET',
         		params:{
-        			
+        			'date':date
         		}
         		
         	}).success(function(data,status,header,config){
         		vm.test2 = data;
         		vm.positions = data;
         		vm.dynMarkers = [];
+        		var i = 0;
+        		for(i = 0; i < data.length; i++){
+        			var marker = new google.maps.Marker({
+                        position: new google.maps.LatLng(data[i][0], data[i][1]),
+                        map: vm.map,
+                        draggable: false,
+                        animation: google.maps.Animation.DROP
+                    });
+        			vm.dynMarkers.push(marker);
+        		}
+        		vm.markerClusterer.clearMarkers();
+        		vm.markerClusterer.addMarkers(vm.dynMarkers );
         	})
         	.error(function(data,status,header,config){});
         }
@@ -46,10 +58,12 @@
 				bounds.extend(cm.getPosition());
 			}
 			;
-
+			
 			vm.markerClusterer = new MarkerClusterer(map, vm.dynMarkers, {});
 			map.setCenter(bounds.getCenter());
 			map.fitBounds(bounds);
+			vm.map = map;
+			vm.bounds = bounds;
 		});
 		vm.refreshWindow = function(){
 			window.location.reload();
@@ -69,13 +83,13 @@
 	<div ng-app="myApp" ng-controller="mapController as vm" class="abc">
 		<h1>Marker Cluster</h1>
 		<hr />
-		<button ng-click="vm.grabData()">click me</button>
+		<button ng-click="vm.grabData('asdsads')">click me</button>
 		<button ng-click="vm.refreshWindow()">refresh</button>
 		<button ng-click="vm.remove()">remove</button>
 		<button ng-click="vm.append()">append</button>
 		<div class="cus-map">
 			<ng-map zoom="8" center="[-37.82238533,145.17729459]">
-				 <custom-marker	position="[{{p[0]}}, {{p[1]}}]" ng-repeat="p in vm.positions">
+				 <custom-marker	position="[{{p[0]}}, {{p[1]}}]" ng-repeat="p in vm.positions track by $index">
 					<div class="cm"></div>
 			     </custom-marker>
 			</ng-map>

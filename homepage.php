@@ -10,13 +10,15 @@
 // echo"<br/> -------------------------- <br/>";
 // //
 // }
-
+session_start();
 // fclose ( $file );
 if (function_exists ( $_GET ['f'] )) {
 	$_GET ['f'] ();
 }
 echo json_encode ( getTwitterListByFile ( "data/United States/keepedEngTweets_statuses.log.2014-02-01-00.xz.json" ) );
 function grab() {
+	//echo $_REQUEST['date'];
+	$_SESSION["date"] = $_REQUEST["date"];
 	$year = "2014";
 	$month = "02";
 	$day = "01";
