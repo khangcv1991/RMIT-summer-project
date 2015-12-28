@@ -3,6 +3,7 @@
 
 <head>
 <title>Dynamic ngMap demo</title>
+
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 <script
 	src="https://maps.google.com/maps/api/js?libraries=placeses,visualization,drawing,geometry,places"></script>
@@ -23,14 +24,14 @@
         	$http({
         		//url:"http://localhost:8080/SVN_REPOSIBILITY_HTDOCS/SummerProject/homepage.php?f=grab",
         		url:"homepage.php?f=grab",
-        		method: 'GET',
+        		method: "GET",
         		params:{
-        			'date':date
+        			date:'sadsad'
         		}
         		
         	}).success(function(data,status,header,config){
         		vm.test2 = data;
-        		vm.positions = data;
+        		vm.positions = [];
         		vm.dynMarkers = [];
         		var i = 0;
         		for(i = 0; i < data.length; i++){
@@ -72,8 +73,15 @@
 			$( ".cus-map" ).remove();
 		};
 		vm.append = function(){
-			$( ".abc" ).append('<div class="cus-map"><ng-map zoom="8" center="[-37.82238533,145.17729459]"> <custom-marker	position="[{{p[0]}}, {{p[1]}}]" ng-repeat="p in vm.positions"> <div class="cm"></div></custom-marker></ng-map></div>');
-		};
+			var tag = '<shape name="rectangle"' +
+			        'editable="true"' +
+			        'draggable="true"' +
+			        'bounds="[[-37.82238533,145.17729459],[-37.42238533,145.57729459]]"' +
+			        'on-bounds_changed="vm.boundsChanged()">' +
+			      '</shape>';
+			
+			$( "#m-map" ).append(tag);
+			};
 	});
 </script>
 </head>
@@ -88,7 +96,13 @@
 		<button ng-click="vm.remove()">remove</button>
 		<button ng-click="vm.append()">append</button>
 		<div class="cus-map">
-			<ng-map zoom="8" center="[-37.82238533,145.17729459]">
+			<ng-map zoom="8" center="[-37.82238533,145.17729459]" id="m-map">
+				<shape name="rectangle"					
+			        editable="true"
+			        draggable="true"
+			        bounds="[[-37.82238533,145.17729459],[-37.42238533,145.57729459]]"
+			        on-bounds_changed="vm.boundsChanged()">
+			      </shape>
 				 <custom-marker	position="[{{p[0]}}, {{p[1]}}]" ng-repeat="p in vm.positions track by $index">
 					<div class="cm"></div>
 			     </custom-marker>

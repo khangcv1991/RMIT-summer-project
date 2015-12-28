@@ -10,15 +10,16 @@
 // echo"<br/> -------------------------- <br/>";
 // //
 // }
-session_start();
+session_start ();
 // fclose ( $file );
 if (function_exists ( $_GET ['f'] )) {
 	$_GET ['f'] ();
 }
-echo json_encode ( getTwitterListByFile ( "data/United States/keepedEngTweets_statuses.log.2014-02-01-00.xz.json" ) );
+//grab ();
+// echo json_encode ( getTwitterListByFile ( "data/United States/keepedEngTweets_statuses.log.2014-02-01-00.xz.json" ) );
 function grab() {
-	//echo $_REQUEST['date'];
-	$_SESSION["date"] = $_REQUEST["date"];
+	// echo $_REQUEST['date'];
+	// $_SESSION["date"] = $_REQUEST["date"];
 	$year = "2014";
 	$month = "02";
 	$day = "01";
@@ -26,18 +27,28 @@ function grab() {
 	$query = $year . "-" . $month . "-" . $day;
 	
 	$array = array ();
-	$dir = "/data/Australia/";
-	//echo json_encode ( getTwitterListByFile ( "keepedEngTweets_statuses.log.2014-02-01-00.xz.json" ) );
+	$dir = "data/Australia/";
+	// echo json_encode ( getTwitterListByFile ( "keepedEngTweets_statuses.log.2014-02-01-00.xz.json" ) );
 	
 	// Open a directory, and read its contents
-	if (is_dir ( $dir )) {
-		echo "cannot open dir";
+	if (is_dir ( $dir ) == true) {
+		
 		if ($dh = opendir ( $dir )) {
+// 			echo "read";
+// 			print_r ( readdir ( $dh ) );Ï
 			while ( ($file = readdir ( $dh )) !== false ) {
+				if ($file != "." && $file != "..") {
+					if (strpos ( $file, $query ) !== false) {
+						
+						$array = array_merge($array,getTwitterListByFile($dir.$file));
+					}
+				}
+				// echo $file;
 				
-				echo json_encode ( getTwitterListByFile ( $dir . $file ) );
-				break;
+				// break;
 			}
+			
+			echo json_encode ( $array);
 			closedir ( $dh );
 		} else {
 			echo "cannot open dir";
@@ -53,7 +64,7 @@ function getTwitterListByFile($path) {
 			// process the line read.
 			
 			$tmp_object = json_decode ( $line );
-			//print_r ( $tmp_object );
+			// print_r ( $tmp_object );
 			$tmp_item = ( array ) $tmp_object;
 			if (( array ) $tmp_item ['geo'] != null) {
 				$item = array ();
