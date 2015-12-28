@@ -13,8 +13,9 @@
 var app = angular.module('myApp', ['ngMap']);
 
 app.controller('mapController', function($http, $interval, NgMap) {
-  var vm = this;
-  vm.positions = [];
+	  var vm = this;
+	  vm.positions = [];
+	  vm.markerCollection = [];
 	  vm.grabData = function(){
 	  	$http({
 	  		//url:"http://localhost:8080/SVN_REPOSIBILITY_HTDOCS/SummerProject/homepage.php?f=grab",
@@ -49,9 +50,20 @@ app.controller('mapController', function($http, $interval, NgMap) {
 	  	})
 	  	.error(function(data,status,header,config){});
 	  }
-    vm.dynMarkers = []
-    NgMap.getMap().then(function(map) {
-     vm.map = map;
+	    vm.dynMarkers = []
+	    NgMap.getMap().then(function(map) {
+	    vm.map = map;
+	    /* vm.boundsChanged = function(){
+	    	vm.ne = this.getBounds().getNorthEast();
+	        vm.sw = this.getBounds().getSouthWest();
+	        var i;
+	        for(i = 0; i < data.length; i++){
+	  			if(data[i][0] ){
+	  				
+	  			}	
+	  		}
+	    } */
+	    
      
    });
 });
@@ -75,5 +87,8 @@ app.controller('mapController', function($http, $interval, NgMap) {
       </div>
     </custom-marker>
   </ng-map>
+  <b>Rectangle moved.</b><br/>
+    New north-east corner: {{vm.ne.lat()}}, {{vm.ne.lng()}}<br/>
+    New south-west corner: {{vm.sw.lat()}}, {{vm.sw.lng()}}
 </body>
 </html>
