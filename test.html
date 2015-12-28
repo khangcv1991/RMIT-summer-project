@@ -1,113 +1,79 @@
 <!DOCTYPE html>
-<html>
+<html ng-app="myApp">
 
 <head>
 <title>Dynamic ngMap demo</title>
-
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
-<script
-	src="https://maps.google.com/maps/api/js?libraries=placeses,visualization,drawing,geometry,places"></script>
+<script src="https://maps.google.com/maps/api/js?libraries=placeses,visualization,drawing,geometry,places"></script>
 <script src="https://code.angularjs.org/1.3.15/angular.js"></script>
-<script
-	src="https://rawgit.com/allenhwkim/angularjs-google-maps/master/build/scripts/ng-map.js"></script>
-<script
-	src="https://rawgit.com/allenhwkim/angularjs-google-maps/master/testapp/scripts/markerclusterer.js"></script>
-<link href="css/custom-marker.css" rel="stylesheet" />
- <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script> 
+<script src="https://rawgit.com/allenhwkim/angularjs-google-maps/master/build/scripts/ng-map.js"></script>
+<script src="https://rawgit.com/allenhwkim/angularjs-google-maps/master/testapp/scripts/markerclusterer.js"></script>
+<link href="css/custom-marker.css"  rel="stylesheet" />
 <script>
-	var app = angular.module('myApp', [ 'ngMap' ]);
+var app = angular.module('myApp', ['ngMap']);
 
-	app.controller('mapController', function($http, $interval, NgMap) {
-		var vm = this;
-		
-		vm.grabData = function(date){
-        	$http({
-        		//url:"http://localhost:8080/SVN_REPOSIBILITY_HTDOCS/SummerProject/homepage.php?f=grab",
-        		url:"homepage.php?f=grab",
-        		method: "GET",
-        		params:{
-        			date:'sadsad'
-        		}
-        		
-        	}).success(function(data,status,header,config){
-        		vm.test2 = data;
-        		vm.positions = [];
-        		vm.dynMarkers = [];
-        		var i = 0;
-        		for(i = 0; i < data.length; i++){
-        			var marker = new google.maps.Marker({
-                        position: new google.maps.LatLng(data[i][0], data[i][1]),
-                        map: vm.map,
-                        draggable: false,
-                        animation: google.maps.Animation.DROP
-                    });
-        			vm.dynMarkers.push(marker);
-        		}
-        		vm.markerClusterer.clearMarkers();
-        		vm.markerClusterer.addMarkers(vm.dynMarkers );
-        	})
-        	.error(function(data,status,header,config){});
-        }
-		//vm.grabData();
-		vm.positions = [[-37.82238533,145.17729459],[-33.01039532,151.64343987],[-34.18914697,142.23329097],[53.7510172,-1.4528233],[-33.23106891,151.47033236],[-37.81184583,144.96925323],[-32.95791357,151.66497406],[-37.64965259,145.35015003],[-33.39379467,151.34996144],[-27.61579101,153.04702153],[-19.30157982,146.77230067],[42.9550841,-78.74708008],[-33.69854806,150.90595057]]
-		vm.dynMarkers = [];
-		NgMap.getMap().then(function(map) {
-			var bounds = new google.maps.LatLngBounds();
-			for ( var k in map.customMarkers) {
-				var cm = map.customMarkers[k];
-				vm.dynMarkers.push(cm);
-				bounds.extend(cm.getPosition());
-			}
-			;
-			
-			vm.markerClusterer = new MarkerClusterer(map, vm.dynMarkers, {});
-			map.setCenter(bounds.getCenter());
-			map.fitBounds(bounds);
-			vm.map = map;
-			vm.bounds = bounds;
-		});
-		vm.refreshWindow = function(){
-			window.location.reload();
-		};
-		vm.remove = function (){
-			$( ".cus-map" ).remove();
-		};
-		vm.append = function(){
-			var tag = '<shape name="rectangle"' +
-			        'editable="true"' +
-			        'draggable="true"' +
-			        'bounds="[[-37.82238533,145.17729459],[-37.42238533,145.57729459]]"' +
-			        'on-bounds_changed="vm.boundsChanged()">' +
-			      '</shape>';
-			
-			$( "#m-map" ).append(tag);
-			};
-	});
+app.controller('mapController', function($http, $interval, NgMap) {
+  var vm = this;
+  vm.positions = [];
+	  vm.grabData = function(){
+	  	$http({
+	  		//url:"http://localhost:8080/SVN_REPOSIBILITY_HTDOCS/SummerProject/homepage.php?f=grab",
+	  		url:"homepage.php?f=grab",
+	  		method: "GET",
+	  		params:{
+	  			date:'sadsad'
+	  		}
+	  		
+	  	}).success(function(data,status,header,config){
+	  		//vm.test2 = data;
+	  		vm.positions = [];
+	  		vm.dynMarkers = [];
+	  		var i = 0;
+	  		var bounds = new google.maps.LatLngBounds();
+	  		for(i = 0; i < data.length; i++){
+	  			var marker = new google.maps.Marker({
+	                  position: new google.maps.LatLng(data[i][0], data[i][1]),
+	                  map: vm.map,
+	                  draggable: false,
+	                  animation: google.maps.Animation.DROP
+	              });
+	  			vm.dynMarkers.push(marker);
+	  			 bounds.extend(marker.getPosition());
+	  		}
+	  		//vm.markerClusterer.clearMarkers();
+	  		//vm.markerClusterer.addMarkers(vm.map,vm.dynMarkers );
+	  		vm.markerClusterer = new MarkerClusterer(vm.map, vm.dynMarkers, {});
+	  		vm.map.setCenter(bounds.getCenter());
+	  		vm.map.fitBounds(bounds); 
+	  		
+	  	})
+	  	.error(function(data,status,header,config){});
+	  }
+    vm.dynMarkers = []
+    NgMap.getMap().then(function(map) {
+     vm.map = map;
+     
+   });
+});
 </script>
 </head>
 
-<body>
-
-	<div ng-app="myApp" ng-controller="mapController as vm" class="abc">
-		<h1>Marker Cluster</h1>
-		<hr />
-		<button ng-click="vm.grabData('asdsads')">click me</button>
-		<button ng-click="vm.refreshWindow()">refresh</button>
-		<button ng-click="vm.remove()">remove</button>
-		<button ng-click="vm.append()">append</button>
-		<div class="cus-map">
-			<ng-map zoom="8" center="[-37.82238533,145.17729459]" id="m-map">
-				<shape name="rectangle"					
+<body ng-controller="mapController as vm">
+  <h1>Marker Cluster</h1>
+  <hr />
+  <button ng-click="vm.grabData()">click me</button>
+  <ng-map zoom="8" center="[-37.82238533,145.17729459]"">
+  	<shape name="rectangle"					
 			        editable="true"
 			        draggable="true"
 			        bounds="[[-37.82238533,145.17729459],[-37.42238533,145.57729459]]"
 			        on-bounds_changed="vm.boundsChanged()">
 			      </shape>
-				 <custom-marker	position="[{{p[0]}}, {{p[1]}}]" ng-repeat="p in vm.positions track by $index">
-					<div class="cm"></div>
-			     </custom-marker>
-			</ng-map>
-		</div>
-	</div>
+    <custom-marker position="[{{p[0]}}, {{p[1]}}]" ng-repeat="p in vm.positions">
+      <div class="cm">
+      
+      </div>
+    </custom-marker>
+  </ng-map>
 </body>
 </html>
