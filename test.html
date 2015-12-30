@@ -29,6 +29,7 @@ app.controller('mapController', function($http, $interval, NgMap) {
 	  		//vm.test2 = data;
 	  		vm.positions = [];
 	  		vm.dynMarkers = [];
+	  		vm.data = data;
 	  		var i = 0;
 	  		var bounds = new google.maps.LatLngBounds();
 	  		for(i = 0; i < data.length; i++){
@@ -53,17 +54,23 @@ app.controller('mapController', function($http, $interval, NgMap) {
 	    vm.dynMarkers = []
 	    NgMap.getMap().then(function(map) {
 	    vm.map = map;
-	    /* vm.boundsChanged = function(){
+	    vm.boundsChanged = function(){
+	    	vm.markerCollection = [];
 	    	vm.ne = this.getBounds().getNorthEast();
 	        vm.sw = this.getBounds().getSouthWest();
 	        var i;
-	        for(i = 0; i < data.length; i++){
-	  			if(data[i][0] ){
-	  				
-	  			}	
+	        var ne_lat = parseFloat(vm.ne.lat());
+	        var ne_lng = parseFloat(vm.ne.lng());
+	        var sw_lat = parseFloat(vm.sw.lat());
+	        var sw_lng = parseFloat(vm.sw.lng());
+	        for(i = 0; i < vm.data.length; i++){
+	  			if((vm.data[i][0]) < ne_lat && vm.data[i][0]> sw_lat){
+	  				if(parseFloat( vm.data[i][1]) > sw_lng &&  parseFloat(vm.data[i][1]) < ne_lng ){
+	  					vm.markerCollection.push(vm.data[i]);	  				
+	  				}	
+	  			}
 	  		}
-	    } */
-	    
+	    }	    
      
    });
 });
@@ -90,5 +97,8 @@ app.controller('mapController', function($http, $interval, NgMap) {
   <b>Rectangle moved.</b><br/>
     New north-east corner: {{vm.ne.lat()}}, {{vm.ne.lng()}}<br/>
     New south-west corner: {{vm.sw.lat()}}, {{vm.sw.lng()}}
+    <br/>
+    data collection: {{vm.markerCollection}}
+    
 </body>
 </html>
