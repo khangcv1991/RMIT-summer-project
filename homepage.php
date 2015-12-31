@@ -19,15 +19,27 @@ if (function_exists ( $_GET ['f'] )) {
 // echo json_encode ( getTwitterListByFile ( "data/United States/keepedEngTweets_statuses.log.2014-02-01-00.xz.json" ) );
 function grab() {
 	// echo $_REQUEST['date'];
-	// $_SESSION["date"] = $_REQUEST["date"];
-	$year = "2014";
-	$month = "02";
-	$day = "01";
-	$hour = "";
-	$query = $year . "-" . $month . "-" . $day;
+// 	// $_SESSION["date"] = $_REQUEST["date"];
+// 	$year = "2014";
+// 	$month = "02";
+// 	$day = "01";
+// 	$hour = "";
+	$year = intval($_GET['year']);
+	$month = intval($_GET['month']);
+	$day = intval($_GET['day']);
+	$hour = intval($_GET['hour']);
+	//echo $hour;
+	if($day < 10)
+		$day = "0".$day;
+	if($month < 10)
+		$month = "0".$month;
+	if($hour < 10)
+		$hour = "0".$hour;
+	$query = $year . "-" . $month . "-" . $day. "-".$hour;
+	
 	
 	$array = array ();
-	$dir = "data/Australia/";
+	$dir = "data/United States/";
 	// echo json_encode ( getTwitterListByFile ( "keepedEngTweets_statuses.log.2014-02-01-00.xz.json" ) );
 	
 	// Open a directory, and read its contents
@@ -39,7 +51,7 @@ function grab() {
 			while ( ($file = readdir ( $dh )) !== false ) {
 				if ($file != "." && $file != "..") {
 					if (strpos ( $file, $query ) !== false) {
-						
+						//echo $query;
 						$array = array_merge($array,getTwitterListByFile($dir.$file));
 					}
 				}

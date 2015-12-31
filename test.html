@@ -12,14 +12,14 @@
 <script>
 var app = angular.module('myApp', ['ngMap']);
 
-app.controller('mapController', function($http, $interval, NgMap) {
+app.controller('mapController', function($http, $interval, NgMap,$scope) {
 	  var vm = this;
 	  vm.positions = [];
 	  vm.markerCollection = [];
 	  vm.grabData = function(){
 	  	$http({
 	  		//url:"http://localhost:8080/SVN_REPOSIBILITY_HTDOCS/SummerProject/homepage.php?f=grab",
-	  		url:"homepage.php?f=grab",
+	  		url:"homepage.php?f=grab&year=2014&month=" + $scope.month + "&day="+$scope.day+"&hour=" + $scope.hour,
 	  		method: "GET",
 	  		params:{
 	  			date:'sadsad'
@@ -80,7 +80,7 @@ app.controller('mapController', function($http, $interval, NgMap) {
 <body ng-controller="mapController as vm">
   <h1>Marker Cluster</h1>
   <hr />
-  <button ng-click="vm.grabData()">click me</button>
+ 
   <ng-map zoom="8" center="[-37.82238533,145.17729459]"">
   	<shape name="rectangle"					
 			        editable="true"
@@ -98,7 +98,11 @@ app.controller('mapController', function($http, $interval, NgMap) {
     New north-east corner: {{vm.ne.lat()}}, {{vm.ne.lng()}}<br/>
     New south-west corner: {{vm.sw.lat()}}, {{vm.sw.lng()}}
     <br/>
-    data collection: {{vm.markerCollection}}
+    data collection: {{vm.markerCollection}} <br/>
     
+   Month: <input type="text" ng-model="month" /> <br/>
+   Day: <input type="text" ng-model="day" /> <br/>
+   Hour: <input type="text" ng-model="hour" /> <br/>
+    <button ng-click="vm.grabData()">click me</button>
 </body>
 </html>
