@@ -14,12 +14,16 @@ var app = angular.module('myApp', ['ngMap']);
 
 app.controller('mapController', function($http, $interval, NgMap,$scope) {
 	  var vm = this;
+	  vm.markerClusterer  = null;
+	  vm.month;
+	  vm.day;
+	  vm.hour;
 	  vm.positions = [];
 	  vm.markerCollection = [];
 	  vm.grabData = function(){
 	  	$http({
 	  		//url:"http://localhost:8080/SVN_REPOSIBILITY_HTDOCS/SummerProject/homepage.php?f=grab",
-	  		url:"homepage.php?f=grab&year=2014&month=" + $scope.month + "&day="+$scope.day+"&hour=" + $scope.hour,
+	  		url:"homepage.php?f=grab&year=2014&month=" + vm.month + "&day="+ vm.day +"&hour=" + vm.hour,
 	  		method: "GET",
 	  		params:{
 	  			date:'sadsad'
@@ -42,9 +46,12 @@ app.controller('mapController', function($http, $interval, NgMap,$scope) {
 	  			vm.dynMarkers.push(marker);
 	  			 bounds.extend(marker.getPosition());
 	  		}
-	  		//vm.markerClusterer.clearMarkers();
+	  		if(vm.markerClusterer){
+	  			vm.markerClusterer.clearMarkers();
+	  		}
 	  		//vm.markerClusterer.addMarkers(vm.map,vm.dynMarkers );
-	  		vm.markerClusterer = new MarkerClusterer(vm.map, vm.dynMarkers, {});
+	  		var cluster = new MarkerClusterer(vm.map, vm.dynMarkers, {});
+	  		vm.markerClusterer = cluster;
 	  		vm.map.setCenter(bounds.getCenter());
 	  		vm.map.fitBounds(bounds); 
 	  		
@@ -98,11 +105,12 @@ app.controller('mapController', function($http, $interval, NgMap,$scope) {
     New north-east corner: {{vm.ne.lat()}}, {{vm.ne.lng()}}<br/>
     New south-west corner: {{vm.sw.lat()}}, {{vm.sw.lng()}}
     <br/>
+    {{vm.markerCollection.length}}<br/>
     data collection: {{vm.markerCollection}} <br/>
     
-   Month: <input type="text" ng-model="month" /> <br/>
-   Day: <input type="text" ng-model="day" /> <br/>
-   Hour: <input type="text" ng-model="hour" /> <br/>
+   Month: <input type="text" ng-model="vm.month" /> <br/>
+   Day: <input type="text" ng-model="vm.day"  /> <br/>
+   Hour: <input type="text" ng-model="vm.hour" /> <br/>
     <button ng-click="vm.grabData()">click me</button>
 </body>
 </html>

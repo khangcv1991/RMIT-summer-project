@@ -27,7 +27,8 @@ function grab() {
 	$year = intval($_GET['year']);
 	$month = intval($_GET['month']);
 	$day = intval($_GET['day']);
-	$hour = intval($_GET['hour']);
+	//$hour = intval($_GET['hour']);
+	$hour = $_GET['hour'];
 	//echo $hour;
 	if($day < 10)
 		$day = "0".$day;
@@ -40,6 +41,7 @@ function grab() {
 	
 	$array = array ();
 	$dir = "data/United States/";
+	//$dir = "data/Australia/";
 	// echo json_encode ( getTwitterListByFile ( "keepedEngTweets_statuses.log.2014-02-01-00.xz.json" ) );
 	
 	// Open a directory, and read its contents
