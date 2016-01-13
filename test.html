@@ -23,7 +23,7 @@ app.controller('mapController', function($http, $interval, NgMap,$scope) {
 	  vm.grabData = function(){
 	  	$http({
 	  		//url:"http://localhost:8080/SVN_REPOSIBILITY_HTDOCS/SummerProject/homepage.php?f=grab",
-	  		url:"homepage.php?f=grab&year=2014&month=" + vm.month + "&day="+ vm.day +"&hour=" + vm.hour,
+	  		url:"homepage.php?f=grab&year=2014&month=" + vm.month + "&day="+ vm.day +"&hour=" + vm.hour +"&country=" + vm.country,
 	  		method: "GET",
 	  		params:{
 	  			date:'sadsad'
@@ -107,7 +107,7 @@ app.controller('mapController', function($http, $interval, NgMap,$scope) {
     <br/>
     {{vm.markerCollection.length}}<br/>
     data collection: {{vm.markerCollection}} <br/>
-    
+   Country: <input type="text" ng-model="vm.country" /> <br/> 
    Month: <input type="text" ng-model="vm.month" /> <br/>
    Day: <input type="text" ng-model="vm.day"  /> <br/>
    Hour: <input type="text" ng-model="vm.hour" /> <br/>

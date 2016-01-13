@@ -24,6 +24,7 @@ function grab() {
 // 	$month = "02";
 // 	$day = "01";
 // 	$hour = "";
+    $country = $_GET['country'];
 	$year = intval($_GET['year']);
 	$month = intval($_GET['month']);
 	$day = intval($_GET['day']);
