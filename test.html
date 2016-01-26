@@ -4,15 +4,35 @@
 <head>
 <title>Dynamic ngMap demo</title>
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
-<script src="https://maps.google.com/maps/api/js?libraries=placeses,visualization,drawing,geometry,places"></script>
+<script
+	src="https://maps.google.com/maps/api/js?libraries=placeses,visualization,drawing,geometry,places"></script>
 <script src="https://code.angularjs.org/1.3.15/angular.js"></script>
-<script src="https://rawgit.com/allenhwkim/angularjs-google-maps/master/build/scripts/ng-map.js"></script>
-<script src="https://rawgit.com/allenhwkim/angularjs-google-maps/master/testapp/scripts/markerclusterer.js"></script>
-<link href="css/custom-marker.css"  rel="stylesheet" />
-<script>
-var app = angular.module('myApp', ['ngMap']);
 
-app.controller('mapController', function($http, $interval, NgMap,$scope) {
+<script
+	src="https://rawgit.com/allenhwkim/angularjs-google-maps/master/build/scripts/ng-map.js"></script>
+<script
+	src="https://rawgit.com/allenhwkim/angularjs-google-maps/master/testapp/scripts/markerclusterer.js"></script>
+<script src="angular-chart.js/Chart.min.js"></script>
+<script src="angular-chart.js/angular-chart.js"></script>
+<link rel="stylesheet" href="angular-chart.js/angular-chart.css">
+
+<link href="css/custom-marker.css" rel="stylesheet" />
+<script>
+var app = angular.module('myApp', ['ngMap','chart.js']);
+
+app.controller('mCtrl', function($http, $interval, NgMap,$scope) {
+	$scope.labels = ["0 Am", "1 Am", "2 Am", "3 Am","4 Am", "5 Am", "6 Am", "7 Am", "8 Am","9 Am","10 Am", "11 Am", "12 Pm", "1 Pm", "2 Pm", "3 Pm","4 Pm", "5 Pm", "6 Pm", "7 Pm", "8 Pm","9 Pm","10 Pm", "11 Pm",];
+	  $scope.series = ['messages', 'usersss'];
+	  $scope.data = [
+	    [65, 59, 80, 81, 56, 55, 40,65, 59, 80, 81, 56, 55, 40,65, 59, 80, 81, 56, 55, 40,40,40,40],
+	    [28, 48, 40, 19, 86, 27, 90,65, 59, 80, 81, 56, 55, 40,65, 59, 80, 81, 56, 55, 40,40,40,40]
+	  ];
+	  $scope.onClick = function (points, evt) {
+	    console.log(points, evt);
+	    
+	  };
+	
+	
 	  var vm = this;
 	  vm.markerClusterer  = null;
 	  vm.month;
@@ -21,24 +41,28 @@ app.controller('mapController', function($http, $interval, NgMap,$scope) {
 	  vm.positions = [];
 	  vm.markerCollection = [];
 	  vm.grabData = function(){
+		vm.country = vm.country.replace(" ", "+");
 	  	$http({
 	  		//url:"http://localhost:8080/SVN_REPOSIBILITY_HTDOCS/SummerProject/homepage.php?f=grab",
 	  		url:"homepage.php?f=grab&year=2014&month=" + vm.month + "&day="+ vm.day +"&hour=" + vm.hour +"&country=" + vm.country,
 	  		method: "GET",
 	  		params:{
-	  			date:'sadsad'
+	  			date:''
 	  		}
 	  		
 	  	}).success(function(data,status,header,config){
+	  		$scope.data[0]  = data["message"];
+	  		
 	  		//vm.test2 = data;
 	  		vm.positions = [];
 	  		vm.dynMarkers = [];
-	  		vm.data = data;
+	  		vm.data = data["location"];
+	  		//data = vm.data;
 	  		var i = 0;
 	  		var bounds = new google.maps.LatLngBounds();
-	  		for(i = 0; i < data.length; i++){
+	  		for(i = 0; i < vm.data.length; i++){
 	  			var marker = new google.maps.Marker({
-	                  position: new google.maps.LatLng(data[i][0], data[i][1]),
+	                  position: new google.maps.LatLng(vm.data[i][0], vm.data[i][1]),
 	                  map: vm.map,
 	                  draggable: false,
 	                  animation: google.maps.Animation.DROP
@@ -80,37 +104,43 @@ app.controller('mapController', function($http, $interval, NgMap,$scope) {
 	    }	    
      
    });
+	    
+	    
 });
 </script>
 </head>
 
-<body ng-controller="mapController as vm">
-  <h1>Marker Cluster</h1>
-  <hr />
- 
-  <ng-map zoom="8" center="[-37.82238533,145.17729459]"">
-  	<shape name="rectangle"					
-			        editable="true"
-			        draggable="true"
-			        bounds="[[-37.82238533,145.17729459],[-37.42238533,145.57729459]]"
-			        on-bounds_changed="vm.boundsChanged()">
-			      </shape>
-    <custom-marker position="[{{p[0]}}, {{p[1]}}]" ng-repeat="p in vm.positions">
-      <div class="cm">
-      
-      </div>
-    </custom-marker>
-  </ng-map>
-  <b>Rectangle moved.</b><br/>
-    New north-east corner: {{vm.ne.lat()}}, {{vm.ne.lng()}}<br/>
-    New south-west corner: {{vm.sw.lat()}}, {{vm.sw.lng()}}
-    <br/>
-    {{vm.markerCollection.length}}<br/>
-    data collection: {{vm.markerCollection}} <br/>
-   Country: <input type="text" ng-model="vm.country" /> <br/> 
-   Month: <input type="text" ng-model="vm.month" /> <br/>
-   Day: <input type="text" ng-model="vm.day"  /> <br/>
-   Hour: <input type="text" ng-model="vm.hour" /> <br/>
-    <button ng-click="vm.grabData()">click me</button>
+<body ng-controller="mCtrl as vm">
+	<h1>Marker Cluster</h1>
+	<hr />
+
+	<ng-map zoom="8" center="[-37.82238533,145.17729459]""> <shape
+		name="rectangle" editable="true" draggable="true"
+		bounds="[[-37.82238533,145.17729459],[-37.42238533,145.57729459]]"
+		on-bounds_changed="vm.boundsChanged()"> </shape> <custom-marker
+		position="[{{p[0]}}, {{p[1]}}]" ng-repeat="p in vm.positions">
+	<div class="cm"></div>
+	</custom-marker> </ng-map>
+	<b>Rectangle moved.</b>
+	<br /> New north-east corner: {{vm.ne.lat()}}, {{vm.ne.lng()}}
+	<br /> New south-west corner: {{vm.sw.lat()}}, {{vm.sw.lng()}}
+	<br /> {{vm.markerCollection.length}}
+	<br /> data collection: {{vm.markerCollection}}
+	<br /> Country:
+	<input type="text" ng-model="vm.country" />
+	<br /> Month:
+	<input type="text" ng-model="vm.month" />
+	<br /> Day:
+	<input type="text" ng-model="vm.day" />
+	<br /> Hour:
+	<input type="text" ng-model="vm.hour" />
+	<br />
+	<button ng-click="vm.grabData()">click me</button>
+
+
+	<canvas id="line" class="chart chart-line" chart-data="data"
+		chart-labels="labels" chart-legend="true" chart-series="series"
+		chart-click="onClick">
+</canvas>
 </body>
 </html>
