@@ -1,5 +1,6 @@
 <?php
-get_user_message_list("Australia");
+get_user_message_list ( "Australia" );
+// get_words_list ();
 // $file = fopen ( "keepedEngTweets_statuses.log.2014-02-01-00.xz.json", "r" ) or die ( "can not open" );
 // while ( ! feof ( $file ) ) {
 // $line = fgets ( $file );
@@ -26,11 +27,23 @@ if (function_exists ( $_GET ['f'] )) {
 function get_words_list() {
 	$filename = "data/words_list";
 	$list = data_read_json ( $filename );
-	return $list;
+	// echo json_encode ( $list ['words'] );
+	return $list ['words'];
+}
+function count_bad_word_in_message($bad_list, $message) {
+	// $words = array();
+	$count = 0;
+	foreach ( $bad_list as $word ) {
+		$count += substr_count ( $message, $word );
+	}
+	if ($count > 0)
+		echo $count . "<br/>";
+	return $count;
 }
 function get_user_info($filename, &$list) {
 	$file = fopen ( $filename, "r" ) or die ( $filename );
 	// echo "cannot open file";
+	$bad_word_list = get_words_list ();
 	if ($file) {
 		while ( ($line = fgets ( $file )) !== false ) {
 			// process the line read.
@@ -43,10 +56,18 @@ function get_user_info($filename, &$list) {
 			if (array_key_exists ( $tmp_item ['user']->id_str, $list ) == false) {
 				$list [$tmp_item ['user']->id_str] = array ();
 				$list [$tmp_item ['user']->id_str] ['messages'] = array ();
+				$list [$tmp_item ['user']->id_str] ['messages_no'] = 0;
+				$list [$tmp_item ['user']->id_str] ['bad_words'] = array ();
+				$list [$tmp_item ['user']->id_str] ['bad_words_no'] = 0;
 				$list [$tmp_item ['user']->id_str] ['weight'] = 0;
 			}
 			// $tmp_item = (array)$tmp_item ['user'];
 			array_push ( $list [$tmp_item ['user']->id_str] ['messages'], $tmp_item ['text'] );
+			$mess_no = $list [$tmp_item ['user']->id_str] ['messages_no'];
+			$list [$tmp_item ['user']->id_str] ['messages_no'] = $mess_no + 1;
+			
+			$bad_word_no = $list [$tmp_item ['user']->id_str] ['bad_words_no'] ;
+			$list [$tmp_item ['user']->id_str] ['bad_words_no'] = $bad_word_no + count_bad_word_in_message ( $bad_word_list, $tmp_item ['text'] );
 			/*
 			 * if ($tmp_item ['text'] != null) {
 			 * $item = array ();
@@ -57,7 +78,7 @@ function get_user_info($filename, &$list) {
 			 * }
 			 */
 		}
-		// echo json_encode($list);
+		// echo json_encode ( $list );
 		
 		fclose ( $file );
 	} else {
