@@ -21,20 +21,27 @@
 var app = angular.module('myApp', ['ngMap','chart.js']);
 
 app.controller('mCtrl', function($http, $interval, NgMap,$scope) {
-	$scope.labels = ["0 Am", "1 Am", "2 Am", "3 Am","4 Am", "5 Am", "6 Am", "7 Am", "8 Am","9 Am","10 Am", "11 Am", "12 Pm", "1 Pm", "2 Pm", "3 Pm","4 Pm", "5 Pm", "6 Pm", "7 Pm", "8 Pm","9 Pm","10 Pm", "11 Pm",];
-	  $scope.series = ['messages', 'usersss'];
-	  $scope.data = [
-	    [65, 59, 80, 81, 56, 55, 40,65, 59, 80, 81, 56, 55, 40,65, 59, 80, 81, 56, 55, 40,40,40,40],
-	    [28, 48, 40, 19, 86, 27, 90,65, 59, 80, 81, 56, 55, 40,65, 59, 80, 81, 56, 55, 40,40,40,40]
+	$scope.labels1 = ["0 Am", "1 Am", "2 Am", "3 Am","4 Am", "5 Am", "6 Am", "7 Am", "8 Am","9 Am","10 Am", "11 Am", "12 Pm", "1 Pm", "2 Pm", "3 Pm","4 Pm", "5 Pm", "6 Pm", "7 Pm", "8 Pm","9 Pm","10 Pm", "11 Pm",];
+	  $scope.series1 = ['messages', 'usersss'];
+	  $scope.data1 = [
+	    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0,0,0,0,0],
+	    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0,0,0,0,0]
 	  ];
 	  $scope.onClick = function (points, evt) {
 	    console.log(points, evt);
 	    
 	  };
-	
+	  $scope.labels2 = ["-","-","-","-","-","-","-"];
+	  $scope.series2 = ['messages', 'usersss'];
+	  $scope.data2 = [
+	    [0, 0, 0, 0, 0, 0, 0],
+	    [0, 0, 0, 0, 0, 0, 0]
+	  ];
 	
 	  var vm = this;
 	  vm.markerClusterer  = null;
+	  //20160205 add
+	  vm.risk;
 	  vm.month;
 	  vm.day;
 	  vm.hour;
@@ -44,15 +51,17 @@ app.controller('mCtrl', function($http, $interval, NgMap,$scope) {
 		vm.country = vm.country.replace(" ", "+");
 	  	$http({
 	  		//url:"http://localhost:8080/SVN_REPOSIBILITY_HTDOCS/SummerProject/homepage.php?f=grab",
-	  		url:"homepage.php?f=grab&year=2014&month=" + vm.month + "&day="+ vm.day +"&hour=" + vm.hour +"&country=" + vm.country,
+	  		url:"homepage.php?f=grab&year=2014&month=" + vm.month + "&day="+ vm.day +"&hour=" + vm.hour +"&country=" + vm.country + "&risk=" + vm.risk,
 	  		method: "GET",
 	  		params:{
 	  			date:''
 	  		}
 	  		
 	  	}).success(function(data,status,header,config){
-	  		$scope.data[0]  = data["message"];
-	  		
+	  		$scope.data1[0]  = data["day_message"];
+	  		$scope.labels2 = data["week_label"];
+	  		$scope.data2[0]  = data["week_message"];
+	  		//$scope.data2[0]  = data[""];
 	  		//vm.test2 = data;
 	  		vm.positions = [];
 	  		vm.dynMarkers = [];
@@ -111,36 +120,53 @@ app.controller('mCtrl', function($http, $interval, NgMap,$scope) {
 </head>
 
 <body ng-controller="mCtrl as vm">
-	<h1>Marker Cluster</h1>
+	<h1>JL1 Project</h1>
 	<hr />
 
-	<ng-map zoom="8" center="[-37.82238533,145.17729459]""> <shape
-		name="rectangle" editable="true" draggable="true"
-		bounds="[[-37.82238533,145.17729459],[-37.42238533,145.57729459]]"
-		on-bounds_changed="vm.boundsChanged()"> </shape> <custom-marker
-		position="[{{p[0]}}, {{p[1]}}]" ng-repeat="p in vm.positions">
-	<div class="cm"></div>
-	</custom-marker> </ng-map>
-	<b>Rectangle moved.</b>
-	<br /> New north-east corner: {{vm.ne.lat()}}, {{vm.ne.lng()}}
-	<br /> New south-west corner: {{vm.sw.lat()}}, {{vm.sw.lng()}}
-	<br /> {{vm.markerCollection.length}}
-	<br /> data collection: {{vm.markerCollection}}
-	<br /> Country:
-	<input type="text" ng-model="vm.country" />
-	<br /> Month:
-	<input type="text" ng-model="vm.month" />
-	<br /> Day:
-	<input type="text" ng-model="vm.day" />
-	<br /> Hour:
-	<input type="text" ng-model="vm.hour" />
+	<div class="body-wrapper">
+		<div class="map-wrapper">
+			<ng-map zoom="8" center="[-37.82238533,145.17729459]""> <shape
+				name="rectangle" editable="true" draggable="true"
+				bounds="[[-37.82238533,145.17729459],[-37.42238533,145.57729459]]"
+				on-bounds_changed="vm.boundsChanged()"> </shape> <custom-marker
+				position="[{{p[0]}}, {{p[1]}}]" ng-repeat="p in vm.positions">
+			<div class="cm"></div>
+			</custom-marker> </ng-map>
+		</div>
+		<div class="black-list-wrapper">
+			<br /> New north-east corner: {{vm.ne.lat()}}, {{vm.ne.lng()}} <br />
+			New south-west corner: {{vm.sw.lat()}}, {{vm.sw.lng()}} <br />
+			{{vm.markerCollection.length}} <br /> data collection:
+			{{vm.markerCollection}}
+		</div>
+		<div class="controller-wrapper">
+			<br /> Black list (yes/no): <input type="text" ng-model="vm.risk" />
+			<br /> Country: <input type="text" ng-model="vm.country" /> <br />
+			Month: <input type="text" ng-model="vm.month" /> <br /> Day: <input
+				type="text" ng-model="vm.day" /> <br /> Hour: <input type="text"
+				ng-model="vm.hour" /> <br />
+			<button ng-click="vm.grabData()">click me</button>
+		</div>
+		<div class="diagrams-wrapper">
+			<div id="diagram1">
+				<canvas id="line" class="chart chart-line" chart-data="data1"
+					chart-labels="labels1" chart-legend="true" chart-series="series1"
+					chart-click="onClick"></canvas>
+				<canvas id="line" class="chart chart-line" chart-data="data2"
+					chart-labels="labels2" chart-legend="true" chart-series="series2"
+					chart-click="onClick"></canvas>
+			</div>
+		</div>
+	</div>
+
+
 	<br />
-	<button ng-click="vm.grabData()">click me</button>
+	<br />
+
+	<b>Rectangle moved.</b>
 
 
-	<canvas id="line" class="chart chart-line" chart-data="data"
-		chart-labels="labels" chart-legend="true" chart-series="series"
-		chart-click="onClick">
-</canvas>
+
+
 </body>
 </html>

@@ -1,5 +1,14 @@
 <?php
-get_user_message_list ( "Australia" );
+ini_set ( 'max_execution_time', 300 );
+// data_write_json();
+// $bad_word_list = get_words_list ();
+// $root_folder = "United States";
+$root_folder = "United States";
+// get_user_message_list();
+// write_bad_people_list ();
+// get_user_message_list();
+// create_file ( "1234.json", "Australia" );
+// get_user_message_list ( "United States" );
 // get_words_list ();
 // $file = fopen ( "keepedEngTweets_statuses.log.2014-02-01-00.xz.json", "r" ) or die ( "can not open" );
 // while ( ! feof ( $file ) ) {
@@ -24,6 +33,99 @@ if (function_exists ( $_GET ['f'] )) {
 /**
  * **bad word analysis****
  */
+function create_file($file_name, $root_folder) {
+	global $bad_word_list;
+	// echo "data/" . $root_folder . "/user/" . $file_name;
+	// $file = fopen ( "data/" . $root_folder . "/user/" . $file_name, "w" ) or die ( $file_name );
+	// chmod ( "data/" . $root_folder . "/user/" . $file_name, 0777 );
+	var_dump ( $bad_word_list );
+}
+function write_bad_people_list() {
+	global $root_folder;
+	$dir = "data/" . $root_folder . "/user/";
+	echo $dir;
+	$list = array ();
+	$list ['users'] = array ();
+	$list ['location'] = array ();
+	if (is_dir ( $dir ) == true) {
+		
+		if ($dh = opendir ( $dir )) {
+			// echo "read";
+			// print_r ( readdir ( $dh ) );Ï
+			while ( ($file = readdir ( $dh )) !== false ) {
+				echo "<br/>";
+				echo $dh;
+				if ($file != "." && $file != "..") {
+					// get_user_info ( $dir . $file, $list );
+					$tmp_str = file_get_contents ( $dir . $file );
+					
+					$tmp_json = json_decode ( $tmp_str, true );
+					if ($tmp_json ['bad_words_no'] > 0) {
+						/*
+						 * $tmp_user = array();
+						 * $tmp_user['id_str'] = str_replace(".json", "", $file);
+						 * $tmp_user['messages'] = $tmp_json['messages'];
+						 * $tmp_user['messages_no'] = $tmp_json['messages_no'];
+						 * $tmp_user['bad_words'] = $tmp_json['bad_words'];
+						 * $tmp_user['bad_words_no'] = $tmp_json['bad_words_no'];
+						 */
+						$tmp_json ['id_str'] = str_replace ( ".json", "", $file );
+						array_push ( $list ['users'], $tmp_json );
+						$list ['location'] = array_merge ( $list ['location'], $tmp_json ['location'] );
+					}
+				}
+				// echo $file;
+				
+				// break;
+			}
+			
+			// echo json_encode ( $array );
+			$re_data = array ();
+			foreach ( array_filter ( $list ['location'] ) as $item )
+				array_push ( $re_data, $item );
+			return $re_data;
+			closedir ( $dh );
+			// return $array;
+		} else {
+			echo "cannot open dir";
+		}
+	}
+}
+function write_user_info($user_id, $content, $root_folder) {
+	global $bad_word_list;
+	
+	$file_name = "data/" . $root_folder . "/user/" . $user_id . ".json";
+	if (file_exists ( $file_name ) == false) {
+		$file = fopen ( $file_name, "w" ) or die ( $file_name );
+		fclose ( $file );
+		chmod ( $file_name, 0777 );
+		$data = array (
+				"messages" => array (),
+				"messages_no" => 0,
+				"bad_words" => array (),
+				"bad_words_no" => 0,
+				"weight" => 0,
+				"location" => array () 
+		);
+		
+		file_put_contents ( $file_name, json_encode ( $data ) );
+	}
+	$data_string = file_get_contents ( $file_name );
+	$data = json_decode ( $data_string, true );
+	$tmp_item = json_decode ( $content, true );
+	var_dump ( $tmp_item );
+	array_push ( $data ["messages"], $tmp_item ['text'] );
+	$mess_no = $data ["messages_no"];
+	$data ["messages_no"] = $mess_no + 1;
+	$bad_word_no = $data ['bad_words_no'];
+	$data ['bad_words_no'] = $bad_word_no + count_bad_word_in_message ( $bad_word_list, $tmp_item ['text'] );
+	
+	// $data ['location'] = $tmp_item ['geo'] ['coordinates'];
+	if ($tmp_item ['geo'] ['coordinates'] != null)
+		$data ['location'] = array_merge ( $data ['location'], $tmp_item ['geo'] ['coordinates'] );
+	
+	file_put_contents ( $file_name, json_encode ( $data ) );
+}
 function get_words_list() {
 	$filename = "data/words_list";
 	$list = data_read_json ( $filename );
@@ -43,31 +145,41 @@ function count_bad_word_in_message($bad_list, $message) {
 function get_user_info($filename, &$list) {
 	$file = fopen ( $filename, "r" ) or die ( $filename );
 	// echo "cannot open file";
-	$bad_word_list = get_words_list ();
+	global $bad_word_list; // = get_words_list ();
+	global $root_folder;
 	if ($file) {
 		while ( ($line = fgets ( $file )) !== false ) {
 			// process the line read.
 			
-			$tmp_object = json_decode ( $line );
+			$tmp_object = json_decode ( $line, true );
 			// print_r ( $tmp_object );
-			$tmp_item = ( array ) $tmp_object;
+			// $tmp_item = ( array ) $tmp_object;
 			
 			// echo $tmp_item ['user'] ->id_str;
-			if (array_key_exists ( $tmp_item ['user']->id_str, $list ) == false) {
-				$list [$tmp_item ['user']->id_str] = array ();
-				$list [$tmp_item ['user']->id_str] ['messages'] = array ();
-				$list [$tmp_item ['user']->id_str] ['messages_no'] = 0;
-				$list [$tmp_item ['user']->id_str] ['bad_words'] = array ();
-				$list [$tmp_item ['user']->id_str] ['bad_words_no'] = 0;
-				$list [$tmp_item ['user']->id_str] ['weight'] = 0;
+			try {
+				/*
+				 * if ($tmp_item ['user']->id_str != null && array_key_exists ( $tmp_item ['user']->id_str, $list ) == false) {
+				 * $list [$tmp_item ['user']->id_str] = array ();
+				 * $list [$tmp_item ['user']->id_str] ['messages'] = array ();
+				 * $list [$tmp_item ['user']->id_str] ['messages_no'] = 0;
+				 * $list [$tmp_item ['user']->id_str] ['bad_words'] = array ();
+				 * $list [$tmp_item ['user']->id_str] ['bad_words_no'] = 0;
+				 * $list [$tmp_item ['user']->id_str] ['weight'] = 0;
+				 *
+				 * // $tmp_item = (array)$tmp_item ['user'];
+				 * array_push ( $list [$tmp_item ['user']->id_str] ['messages'], $tmp_item ['text'] );
+				 * $mess_no = $list [$tmp_item ['user']->id_str] ['messages_no'];
+				 * $list [$tmp_item ['user']->id_str] ['messages_no'] = $mess_no + 1;
+				 *
+				 * $bad_word_no = $list [$tmp_item ['user']->id_str] ['bad_words_no'];
+				 * $list [$tmp_item ['user']->id_str] ['bad_words_no'] = $bad_word_no + count_bad_word_in_message ( $bad_word_list, $tmp_item ['text'] );
+				 *
+				 * }
+				 */
+				write_user_info ( $tmp_object ['user'] ['id_str'], $line, $root_folder );
+			} catch ( Exception $e ) {
+				echo $filename;
 			}
-			// $tmp_item = (array)$tmp_item ['user'];
-			array_push ( $list [$tmp_item ['user']->id_str] ['messages'], $tmp_item ['text'] );
-			$mess_no = $list [$tmp_item ['user']->id_str] ['messages_no'];
-			$list [$tmp_item ['user']->id_str] ['messages_no'] = $mess_no + 1;
-			
-			$bad_word_no = $list [$tmp_item ['user']->id_str] ['bad_words_no'] ;
-			$list [$tmp_item ['user']->id_str] ['bad_words_no'] = $bad_word_no + count_bad_word_in_message ( $bad_word_list, $tmp_item ['text'] );
 			/*
 			 * if ($tmp_item ['text'] != null) {
 			 * $item = array ();
@@ -85,10 +197,11 @@ function get_user_info($filename, &$list) {
 		// error opening the file.
 	}
 }
-function get_user_message_list($country) {
+function get_user_message_list() {
 	// each item in the list <user_id, message, lastest location, weight>
+	global $root_folder;
 	$list = array ();
-	$dir = "data/" . $country . "/";
+	$dir = "data/" . $root_folder . "/";
 	
 	// Open a directory, and read its contents
 	if (is_dir ( $dir ) == true) {
@@ -119,6 +232,42 @@ function weight_user($country) {
 /**
  * ******
  */
+function get_customize_date2($month, $day, $day_no) {
+	if ($day_no > 31)
+		die ( "invalid input" );
+	$out_day = $day + $day_no;
+	$out_month = $month;
+	if ($month == 2 && $out_day > 29) {
+		$out_day = $out_day - 29;
+		$out_month = $out_month + 1;
+	}
+	if ($out_day > 30 && $month % 2 == 0 && month != 2) {
+		$out_day = $out_day - 30;
+		$out_month = $out_month + 1;
+	}
+	
+	if ($out_day > 31 && $month % 2 == 1) {
+		$out_day = $out_day - 31;
+		$out_month = $out_month + 1;
+	}
+	if ($out_day <= 0) {
+		if ($month - 1 < 1)
+			die ( "invalid input" );
+		if (($month - 1) % 2 == 1) {
+			$out_day = 31 + $out_day;
+			$out_month --;
+		}
+		if (($month - 1) % 2 == 0 && $month - 1 != 2) {
+			$out_day = 30 + $out_day;
+			$out_month --;
+		}
+		if ($month - 1 == 2) {
+			$out_day = 29 + $out_day;
+			$out_month --;
+		}
+	}
+	return "" . $out_day . "-" . $out_month;
+}
 function get_customize_date($year, $month, $day, $hour, $is_full) {
 	$date = "" . $year;
 	if ($month < 10)
@@ -158,7 +307,8 @@ function count_message($date) {
 	}
 }
 function has_file($file_date) {
-	$foldername = "data/" . $_GET ['country'];
+	global $root_folder;
+	$foldername = "data/" . $root_folder;
 	
 	// Open a directory, and read its contents
 	if (is_dir ( $foldername ) == true) {
@@ -188,8 +338,13 @@ function data_read_json($filename) {
 	return json_decode ( $data, true );
 }
 function data_write_json() {
-	$foldername = "data/" . $_GET ['country'];
+	// $foldername = "data/" . $_GET ['country'];
+	global $root_folder;
+	$root_folder = "Australia";
+	echo $root_folder;
+	$foldername = "data/" . $root_folder;
 	$filename = $foldername . "/" . "user_message.json";
+	echo $filename;
 	$data = array ();
 	$month = 1;
 	$max_day = 31;
@@ -224,22 +379,66 @@ function data_write_json() {
 	
 	file_put_contents ( $filename, json_encode ( $data ) );
 }
-function get_message_no_by_date($month, $day = null) {
+function get_message24h_no_by_date($month, $day = null) {
 	$foldername = "data/" . $_GET ['country'];
 	$filename = $foldername . "/" . "user_message.json";
 	$data = data_read_json ( $filename );
+	
 	if (isset ( $day )) {
 		return $data [$month] [$day];
 	}
 	return $data [$month];
 }
+function get_message_no_by_day($month, $day) {
+	$foldername = "data/" . $_GET ['country'];
+	$filename = $foldername . "/" . "user_message.json";
+	$data = data_read_json ( $filename );
+	
+	return array_sum ( $data [intval ( $month )] [intval ( $day )] );
+}
 function get_user_no_by_date($date) {
 }
 function grab() {
 	$data = array ();
-	$data ['location'] = get_location_data ();
-	$data ['message'] = get_message_no_by_date ( intval ( $_GET ['month'] ), intval ( $_GET ['day'] ) );
+	if (strcmp ( "yes", $_GET ['risk'] ) == 0)
+		$data ['location'] = write_bad_people_list ();
+	else
+		$data ['location'] = get_location_data ();
+		// $data ['location'] = write_bad_people_list ();
+	$data ['day_message'] = get_message24h_no_by_date ( intval ( $_GET ['month'] ), intval ( $_GET ['day'] ) );
+	
+	$date_tmp = get_customize_date2 ( intval ( $_GET ['month'] ), intval ( $_GET ['day'] ), - 3 );
+	$out_tmp = split ( "-", $date_tmp );
+	
+	$data ['week_message'] [0] = get_message_no_by_day ( intval ( $out_tmp [1] ), intval ( $out_tmp [0] ) );
+	$date_tmp = get_customize_date2 ( intval ( $_GET ['month'] ), intval ( $_GET ['day'] ), - 2 );
+	$out_tmp = split ( "-", $date_tmp );
+	$data ['week_message'] [1] = get_message_no_by_day ( intval ( $out_tmp [1] ), intval ( $out_tmp [0] ) );
+	$date_tmp = get_customize_date2 ( intval ( $_GET ['month'] ), intval ( $_GET ['day'] ), - 1 );
+	$out_tmp = split ( "-", $date_tmp );
+	$data ['week_message'] [2] = get_message_no_by_day ( intval ( $out_tmp [1] ), intval ( $out_tmp [0] ) );
+	$date_tmp = get_customize_date2 ( intval ( $_GET ['month'] ), intval ( $_GET ['day'] ), 0 );
+	$out_tmp = split ( "-", $date_tmp );
+	$data ['week_message'] [3] = get_message_no_by_day ( intval ( $out_tmp [1] ), intval ( $out_tmp [0] ) );
+	$date_tmp = get_customize_date2 ( intval ( $_GET ['month'] ), intval ( $_GET ['day'] ), 1 );
+	$out_tmp = split ( "-", $date_tmp );
+	$data ['week_message'] [4] = get_message_no_by_day ( intval ( $out_tmp [1] ), intval ( $out_tmp [0] ) );
+	$date_tmp = get_customize_date2 ( intval ( $_GET ['month'] ), intval ( $_GET ['day'] ), 2 );
+	$out_tmp = split ( "-", $date_tmp );
+	$data ['week_message'] [5] = get_message_no_by_day ( intval ( $out_tmp [1] ), intval ( $out_tmp [0] ) );
+	$date_tmp = get_customize_date2 ( intval ( $_GET ['month'] ), intval ( $_GET ['day'] ), 3 );
+	$out_tmp = split ( "-", $date_tmp );
+	$data ['week_message'] [6] = get_message_no_by_day ( intval ( $out_tmp [1] ), intval ( $out_tmp [0] ) );
+	
+	$data ['week_label'] [0] = get_customize_date2 ( intval ( $_GET ['month'] ), intval ( $_GET ['day'] ), - 3 );
+	$data ['week_label'] [1] = get_customize_date2 ( intval ( $_GET ['month'] ), intval ( $_GET ['day'] ), - 2 );
+	$data ['week_label'] [2] = get_customize_date2 ( intval ( $_GET ['month'] ), intval ( $_GET ['day'] ), - 1 );
+	$data ['week_label'] [3] = get_customize_date2 ( intval ( $_GET ['month'] ), intval ( $_GET ['day'] ), 0 );
+	$data ['week_label'] [4] = get_customize_date2 ( intval ( $_GET ['month'] ), intval ( $_GET ['day'] ), 1 );
+	$data ['week_label'] [5] = get_customize_date2 ( intval ( $_GET ['month'] ), intval ( $_GET ['day'] ), 2 );
+	$data ['week_label'] [6] = get_customize_date2 ( intval ( $_GET ['month'] ), intval ( $_GET ['day'] ), 3 );
 	echo json_encode ( $data );
+	// write_bad_people_list ();
 }
 function get_location_data() {
 	$country = $_GET ['country'];
