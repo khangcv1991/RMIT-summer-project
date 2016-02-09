@@ -134,10 +134,17 @@ app.controller('mCtrl', function($http, $interval, NgMap,$scope) {
 			</custom-marker> </ng-map>
 		</div>
 		<div class="black-list-wrapper">
-			<br /> New north-east corner: {{vm.ne.lat()}}, {{vm.ne.lng()}} <br />
-			New south-west corner: {{vm.sw.lat()}}, {{vm.sw.lng()}} <br />
-			{{vm.markerCollection.length}} <br /> data collection:
-			{{vm.markerCollection}}
+			
+			
+			<br/>Userid    <span>------------</span>     weight
+			<br/>1000013424 <span>------ </span>   107
+			<br/>1000034249 <span>------ </span>    98
+			<br/>1000056427 <span>------ </span>    80
+			<br/>1000083424 <span>------ </span>    72
+			<br/>1000029424 <span>------ </span>    65
+			<br/>1000015424 <span>------ </span>    62
+			<br/>1000008427  <span>------ </span>   50
+			
 		</div>
 		<div class="controller-wrapper">
 			<br /> Black list (yes/no): <input type="text" ng-model="vm.risk" />
