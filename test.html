@@ -41,12 +41,72 @@ app.controller('mCtrl', function($http, $interval, NgMap,$scope) {
 	  var vm = this;
 	  vm.markerClusterer  = null;
 	  //20160205 add
+	  vm.blackList;
+	  vm.no_blacklist;
+	  vm.data;
 	  vm.risk;
 	  vm.month;
 	  vm.day;
 	  vm.hour;
 	  vm.positions = [];
 	  vm.markerCollection = [];
+	  vm.view_user_info = function(user){
+		  vm.positions = [];
+	  	  vm.dynMarkers = [];
+		  vm.data = user.location;
+	  		//data = vm.data;
+		  var i = 0;
+	  		var bounds = new google.maps.LatLngBounds();
+	  		for(i = 0; i < vm.data.length; i++){
+	  			var marker = new google.maps.Marker({
+	                  position: new google.maps.LatLng(vm.data[i][0], vm.data[i][1]),
+	                  title:"khang",
+	                  map: vm.map,
+	                  draggable: false,
+	                  animation: google.maps.Animation.DROP
+	              });
+	  			//add listener for marker
+	  			var infoWindow = new google.maps.InfoWindow();
+	  			 google.maps.event.addListener(marker, 'click', function () {
+                var markerContent = user.messages[0];
+                infoWindow.setContent(markerContent);
+                infoWindow.open(vm.map, this);
+            });
+	  			
+	  			
+	  			vm.dynMarkers.push(marker);
+	  			 bounds.extend(marker.getPosition());
+	  		}
+	  		if(vm.markerClusterer){
+	  			vm.markerClusterer.clearMarkers();
+	  		}
+	  		//vm.markerClusterer.addMarkers(vm.map,vm.dynMarkers );
+	  		var cluster = new MarkerClusterer(vm.map, vm.dynMarkers, {});
+	  		vm.markerClusterer = cluster;
+	  		vm.map.setCenter(bounds.getCenter());
+	  		vm.map.fitBounds(bounds);  
+	  }
+	  
+	  
+	  vm.get_black_list = function(){
+			//vm.country = vm.country.replace(" ", "+");
+		  	$http({
+		  		//url:"http://localhost:8080/SVN_REPOSIBILITY_HTDOCS/SummerProject/homepage.php?f=grab",
+		  		url:"DataProcessing.php",
+		  		method: "POST",
+		  		params:{
+		  			'no_record': vm.no_blacklist
+		  		}
+		  		
+		  	}).success(function(data,status,header,config){
+		  		vm.blackList = data;
+		  		
+		  	})
+		  	.error(function(data,status,header,config){});
+		  }
+	  
+	  
+	  
 	  vm.grabData = function(){
 		vm.country = vm.country.replace(" ", "+");
 	  	$http({
@@ -134,17 +194,30 @@ app.controller('mCtrl', function($http, $interval, NgMap,$scope) {
 			</custom-marker> </ng-map>
 		</div>
 		<div class="black-list-wrapper">
+	
+
+
 			
-			
-			<br/>Userid    <span>------------</span>     weight
-			<br/>1000013424 <span>------ </span>   107
-			<br/>1000034249 <span>------ </span>    98
-			<br/>1000056427 <span>------ </span>    80
-			<br/>1000083424 <span>------ </span>    72
-			<br/>1000029424 <span>------ </span>    65
-			<br/>1000015424 <span>------ </span>    62
-			<br/>1000008427  <span>------ </span>   50
-			
+			<button ng-click="vm.get_black_list()">click me</button>
+			<input type="text" ng-change="vm.get_black_list({{vm.no_blacklist}})"
+				ng-model="vm.no_blacklist" />
+			<table>
+				<thead>
+					<th>rank</th>
+					<th>userID</th>
+					<th>weight</th>
+					<th>view</th>>
+				</thead>
+				<tbody>
+					<tr ng-repeat="item in vm.blackList track by $index">
+						<td>{{$index}}</td>
+						<td>{{item.id_str}}</td>
+						<td>{{item.bad_words_no}}</td>
+						<td><button
+								ng-click="vm.view_user_info(vm.blackList[$index])">view</button></td>
+					</tr>
+				</tbody>
+			</table>
 		</div>
 		<div class="controller-wrapper">
 			<br /> Black list (yes/no): <input type="text" ng-model="vm.risk" />

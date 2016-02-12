@@ -4,9 +4,10 @@ ini_set ( 'max_execution_time', 300 );
 $bad_word_list = get_words_list ();
 
 $root_folder = "United States";
-
-get_user_message_list ();
-
+read_bad_people_list ( 12 );
+// get_user_message_list ();
+// write_bad_people_list ();
+// get_user_message_list ();
 /**
  * general functions ***
  */
@@ -154,10 +155,66 @@ function data_write_json() {
 /**
  * write user information to a file which has name as user id **
  */
+function get_user_message_list() {
+	// each item in the list <user_id, message, lastest location, weight>
+	global $root_folder;
+	$list = array ();
+	$dir = "data/" . $root_folder . "/";
+	
+	// Open a directory, and read its contents
+	if (is_dir ( $dir ) == true) {
+		
+		if ($dh = opendir ( $dir )) {
+			// echo "read";
+			// print_r ( readdir ( $dh ) );Ï
+			while ( ($file = readdir ( $dh )) !== false ) {
+				echo $file;
+				if ($file != "." && $file != ".." && strpos ( $file, "keepedEngTweets_statuses" ) >= 0) {
+					get_user_info ( $dir . $file, $list );
+				}
+			}
+			
+			echo json_encode ( $list );
+			closedir ( $dh );
+			return $array;
+		} else {
+			echo "cannot open dir";
+		}
+	}
+}
+function get_user_info($filename, &$list) {
+	$file = fopen ( $filename, "r" ) or die ( $filename );
+	echo $filename;
+	global $bad_word_list; // = get_words_list ();
+	global $root_folder;
+	if ($file) {
+		while ( ($line = fgets ( $file )) !== false ) {
+			// process the line read.
+			
+			$tmp_object = json_decode ( $line, true );
+			// print_r ( $tmp_object );
+			// $tmp_item = ( array ) $tmp_object;
+			
+			// echo $tmp_item ['user'] ->id_str;
+			try {
+				echo $line;
+				write_user_info ( $tmp_object ['user'] ['id_str'], $line, $root_folder );
+			} catch ( Exception $e ) {
+				echo $filename;
+			}
+		}
+		// echo json_encode ( $list );
+		
+		fclose ( $file );
+	} else {
+		// error opening the file.
+	}
+}
 function write_user_info($user_id, $content, $root_folder) {
 	global $bad_word_list;
 	
 	$file_name = "data/" . $root_folder . "/user/" . $user_id . ".json";
+	echo $file_name;
 	if (file_exists ( $file_name ) == false) {
 		$file = fopen ( $file_name, "w" ) or die ( $file_name );
 		fclose ( $file );
@@ -185,7 +242,8 @@ function write_user_info($user_id, $content, $root_folder) {
 	
 	// $data ['location'] = $tmp_item ['geo'] ['coordinates'];
 	if ($tmp_item ['geo'] ['coordinates'] != null)
-		$data ['location'] = array_merge ( $data ['location'], $tmp_item ['geo'] ['coordinates'] );
+		// $data ['location'] = array_merge ( $data ['location'], $tmp_item ['geo'] ['coordinates'] );
+		$data ['location'] [count ( $data ['location'] )] = $tmp_item ['geo'] ['coordinates'];
 	
 	file_put_contents ( $file_name, json_encode ( $data ) );
 }
@@ -217,10 +275,27 @@ function count_bad_word_in_message($bad_list, $message) {
 }
 
 // return potential bad people list
+function read_bad_people_list($no_record = 10) {
+	global $root_folder;
+	$dir = "data/" . $root_folder . "/user/";
+	$data_str = file_get_contents ( $dir . "black_list.json" );
+	$data = json_decode ( $data_str, true );
+	$count = 0;
+	$list = array ();
+	
+	// echo $dir;
+	foreach ( $data ['users'] as $user ) {
+		if ($count >= $no_record)
+			break;
+		array_push ( $list, $user );
+		$count ++;
+	}
+	echo json_encode ( $list );
+}
 function write_bad_people_list() {
 	global $root_folder;
 	$dir = "data/" . $root_folder . "/user/";
-	echo $dir;
+	// echo $dir;
 	$list = array ();
 	$list ['users'] = array ();
 	$list ['location'] = array ();
@@ -230,25 +305,18 @@ function write_bad_people_list() {
 			// echo "read";
 			// print_r ( readdir ( $dh ) );Ï
 			while ( ($file = readdir ( $dh )) !== false ) {
-				echo "<br/>";
-				echo $dh;
+				
 				if ($file != "." && $file != "..") {
 					// get_user_info ( $dir . $file, $list );
 					$tmp_str = file_get_contents ( $dir . $file );
 					
 					$tmp_json = json_decode ( $tmp_str, true );
 					if ($tmp_json ['bad_words_no'] > 0) {
-						/*
-						 * $tmp_user = array();
-						 * $tmp_user['id_str'] = str_replace(".json", "", $file);
-						 * $tmp_user['messages'] = $tmp_json['messages'];
-						 * $tmp_user['messages_no'] = $tmp_json['messages_no'];
-						 * $tmp_user['bad_words'] = $tmp_json['bad_words'];
-						 * $tmp_user['bad_words_no'] = $tmp_json['bad_words_no'];
-						 */
+						// echo $tmp_str;
+						
 						$tmp_json ['id_str'] = str_replace ( ".json", "", $file );
 						array_push ( $list ['users'], $tmp_json );
-						$list ['location'] = array_merge ( $list ['location'], $tmp_json ['location'] );
+						$list ['location'] = array_merge ( ( array ) $list ['location'], ( array ) $tmp_json ['location'] );
 					}
 				}
 				// echo $file;
@@ -256,11 +324,26 @@ function write_bad_people_list() {
 				// break;
 			}
 			
-			// echo json_encode ( $array );
+			// echo json_encode ( $list );
 			$re_data = array ();
 			foreach ( array_filter ( $list ['location'] ) as $item )
 				array_push ( $re_data, $item );
-			return $re_data;
+				// return $re_data;
+			if (file_exists ( $dir . "black_list.json" ) == false) {
+				fopen ( $dir . "black_list.json", "w" ) or die ( "cant open " . $dir . "black_list.json" );
+			}
+			for($i = 0; $i < count ( $list ['users'] ); $i ++) {
+				for($j = $i; $j < count ( $list ['users'] ); $j ++) {
+					if ($list ['users'] [$i] ['bad_words_no'] < $list ['users'] [$j] ['bad_words_no']) {
+						$tmp = $list ['users'] [$i];
+						$list ['users'] [$i] = $list ['users'] [$j];
+						$list ['users'] [$j] = $tmp;
+					}
+				}
+			}
+			
+			file_put_contents ( $dir . "black_list.json", json_encode ( $list ) );
+			
 			closedir ( $dh );
 			// return $array;
 		} else {
