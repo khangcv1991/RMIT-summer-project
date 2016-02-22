@@ -1,4 +1,19 @@
+.heading-wrapper{
+	height:70px;
+	width:100%;
+	
+	margin-bottom:100px;
+}
+.logo{
+	width:145px;
+	height:70px;
+	float:left;
+}
+.title-heading{
+	float:left;
 
+	margin-left:280px;
+}
 .right-body-wrapper{
 	width:700px;
 	float:left;
@@ -29,8 +44,12 @@ input{
 	height: 30px;
 	width: 170px;
 }
+.wrapper{
+	width:1700px;
+}
 .body-wrapper{
-	width:100%;
+	width:1500px;
+	margin:auto;
 }
 .map-wrapper{
 	width:100%;

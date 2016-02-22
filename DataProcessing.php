@@ -4,7 +4,7 @@ ini_set ( 'max_execution_time', 300 );
 $bad_word_list = get_words_list ();
 
 $root_folder = "United States";
-read_bad_people_list ( 12 );
+read_bad_people_list ( 1000 );
 // get_user_message_list ();
 // write_bad_people_list ();
 // get_user_message_list ();

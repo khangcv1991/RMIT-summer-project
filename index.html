@@ -2,7 +2,7 @@
 <html ng-app="myApp">
 
 <head>
-<title>Dynamic ngMap demo</title>
+<title>JL1</title>
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 <script
 	src="https://maps.google.com/maps/api/js?libraries=placeses,visualization,drawing,geometry,places"></script>
@@ -23,9 +23,8 @@ var app = angular.module('myApp', ['ngMap','chart.js']);
 app.controller('mCtrl', function($http, $interval, NgMap,$scope) {
 	//chart 1
 	$scope.labels1 = ["0 Am", "1 Am", "2 Am", "3 Am","4 Am", "5 Am", "6 Am", "7 Am", "8 Am","9 Am","10 Am", "11 Am", "12 Pm", "1 Pm", "2 Pm", "3 Pm","4 Pm", "5 Pm", "6 Pm", "7 Pm", "8 Pm","9 Pm","10 Pm", "11 Pm",];
-	  $scope.series1 = ['messages', 'usersss'];
+	  $scope.series1 = ['messages'];
 	  $scope.data1 = [
-	    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0,0,0,0,0],
 	    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0,0,0,0,0]
 	  ];
 	  $scope.onClick = function (points, evt) {
@@ -34,9 +33,8 @@ app.controller('mCtrl', function($http, $interval, NgMap,$scope) {
 	  };
 	  //chart2
 	  $scope.labels2 = ["-","-","-","-","-","-","-"];
-	  $scope.series2 = ['messages', 'usersss'];
+	  $scope.series2 = ['messages'];
 	  $scope.data2 = [
-	    [0, 0, 0, 0, 0, 0, 0],
 	    [0, 0, 0, 0, 0, 0, 0]
 	  ];
 	//chart3
@@ -56,7 +54,7 @@ app.controller('mCtrl', function($http, $interval, NgMap,$scope) {
 	  vm.cen_pos_lat;
 	  vm.cen_pos_lng;
 	  
-	  vm.blackList;
+	  vm.blackListData;
 	  vm.no_blacklist;
 	  vm.data;
 	  
@@ -69,6 +67,43 @@ app.controller('mCtrl', function($http, $interval, NgMap,$scope) {
 		  vm.cen_pos = vm.map.getCenter();
 		  vm.cen_pos_lat = vm.cen_pos.lat();
 		  vm.cen_pos_lng = vm.cen_pos.lng();
+	  }
+	  
+	  vm.view_all_user_info = function(){
+		  vm.positions = [];
+	  		vm.dynMarkers = [];
+	  		vm.data = [];
+	  		//data = vm.data;
+		  var i = 0;
+		  var j = 0;
+		  for( i = 0; i < vm.blackListData.length; i++){
+			  if(vm.blackListData[i].location.length > 0){
+				  for(j = 0; j < vm.blackListData[i].location.length; j++)
+			  		vm.data.push (vm.blackListData[i].location[j]);
+			  }
+		  }
+		  
+	  		var bounds = new google.maps.LatLngBounds();
+	  		for(i = 0; i < vm.data.length; i++){
+	  			var marker = new google.maps.Marker({
+	                  position: new google.maps.LatLng(vm.data[i][0], vm.data[i][1]),
+	                  map: vm.map,
+	                  draggable: false,
+	                  animation: google.maps.Animation.DROP
+	              });
+	  			vm.dynMarkers.push(marker);
+	  			 bounds.extend(marker.getPosition());
+	  		}
+	  		if(vm.markerClusterer){
+	  			vm.markerClusterer.clearMarkers();
+	  		}
+	  		//vm.markerClusterer.addMarkers(vm.map,vm.dynMarkers );
+	  		var cluster = new MarkerClusterer(vm.map, vm.dynMarkers, {});
+	  		vm.markerClusterer = cluster;
+	  		vm.map.setCenter(bounds.getCenter());
+	  		vm.map.fitBounds(bounds); 
+	  		//20160218 khangcv add
+	  		vm.getCenterPosition();
 	  }
 	  
 	  vm.view_user_info = function(user){
@@ -123,14 +158,22 @@ app.controller('mCtrl', function($http, $interval, NgMap,$scope) {
 		  		}
 		  		
 		  	}).success(function(data,status,header,config){
-		  		vm.blackList = data;
-		  		
+		  		vm.blackListData = data;
+		  		vm.blackList = [];
+		  		var i = 0;
+		  		for(i = 0; i < 10; i++){
+		  			vm.blackList[i] = vm.blackListData[i];
+		  		}
+		  		 
 		  	})
 		  	.error(function(data,status,header,config){});
 		  }
 	  
 	  /**end blacklist**/
-	  
+	  vm.country = "United States";
+	  vm.month = 2;
+	  vm.day = 1;
+	  vm.hour = 1;
 	  vm.grabData = function(){
 		vm.country = vm.country.replace(" ", "+");
 	  	$http({
@@ -185,7 +228,7 @@ app.controller('mCtrl', function($http, $interval, NgMap,$scope) {
 	    	vm.markerCollection = [];
 	    	vm.ne = this.getBounds().getNorthEast();
 	        vm.sw = this.getBounds().getSouthWest();
-	        var i;
+	        var i,j;
 	        var ne_lat = parseFloat(vm.ne.lat());
 	        var ne_lng = parseFloat(vm.ne.lng());
 	        var sw_lat = parseFloat(vm.sw.lat());
@@ -197,10 +240,37 @@ app.controller('mCtrl', function($http, $interval, NgMap,$scope) {
 	  				}	
 	  			}
 	  		}
+	        //black list on bound changed
+	        vm.blackList=[];
+	        var tmp_count = 0;
+	        for( i = 0; i < vm.blackListData.length; i ++){
+	        	if(tmp_count == 100)
+	        		break;
+	        	
+	        	for(j = 0; j < vm.blackListData[i].location.length; j++){
+		        	if(parseFloat( vm.blackListData[i].location[j][0]) < ne_lat && parseFloat( vm.blackListData[i].location[j][0])> sw_lat){
+			        	if(parseFloat( vm.blackListData[i].location[j][1]) > sw_lng &&  parseFloat(vm.blackListData[i].location[j][1]) < ne_lng ){
+		  					vm.blackList.push( vm.blackListData[i]);
+		  					break;
+		  				}
+		        	}
+	        	}
+	        	/*
+	        	
+	        	if(parseFloat( vm.blackListData[i].location[0]) > ne_lat && parseFloat( vm.blackListData[i].location[0]) < sw_lat){
+		        	if(parseFloat( vm.blackListData[i].location[1]) < sw_lng &&  parseFloat(vm.blackListData[i].location[1]) > ne_lng ){
+	  					vm.blackList[tmp_count++] = vm.blackListData[i];	  				
+	  				}
+	        	}
+	        	*/
+	        }
+	        
+	        
 	    }	    
      
    });
-   vm.get_black_list() ;   
+   vm.get_black_list() ;  
+  
     vm.test_lat = -37.82238533;
     vm.fun_test = function(){
     	vm.test_lat =37.02238533;
@@ -210,97 +280,102 @@ app.controller('mCtrl', function($http, $interval, NgMap,$scope) {
 </head>
 
 <body ng-controller="mCtrl as vm">
-	<h1>JL1 Project</h1>
 
 
-	<div class="body-wrapper">
 
-		<div class="controller-wrapper">
-			<button ng-click="vm.fun_test()">test</button>
-			<label>Country</label> <input type="text" ng-model="vm.country" /><label>Month</label>
-			<input type="text" ng-model="vm.month" /><label>Day</label> <input
-				type="text" ng-model="vm.day" /> <label>Hour</label> <input
-				type="text" ng-model="vm.hour" />
-			<button ng-click="vm.grabData()">search</button>
-		</div>
-
-		<div class="left-body-wrapper">
-			{{vm.cen_pos}}	
-			{{vm.cen_pos_lat}}
-			{{vm.cen_pos_lng}}
-			{{vm.cen_pos_lat + 0.2}}
-			{{vm.cen_pos_lng + 0.4}}
-			<!--bounds="[[-37.82238533,145.17729459],[-37.42238533,145.57729459]]"-->
-			<div class="map-wrapper">
-				<ng-map zoom="8" center="[-37.82238533,145.17729459]"> <shape id="foo"
-					name="rectangle" editable="true" draggable="true"
-					bounds="[[-37.82238533,145.17729459],[-37.42238533,145.57729459]]"
-					on-bounds_changed="vm.boundsChanged()"> </shape> <custom-marker
-					position="[{{p[0]}}, {{p[1]}}]" ng-repeat="p in vm.positions">
-				<div class="cm"></div>
-				</custom-marker> </ng-map>
+	<div class="wrapper">
+		<div class="heading-wrapper">
+			<div class="logo">
+				<img src="img/rmit.jpg" width="100%" height="100%">
 			</div>
-			<div class="black-list-wrapper">
-				<table>
-					<thead>
-						<th>rank</th>
-						<th>userID</th>
-						<th>weight</th>
-						<th>view</th>>
-					</thead>
-					<tbody>
-						<tr ng-repeat="item in vm.blackList track by $index">
-							<td>{{$index}}</td>
-							<td>{{item.id_str}}</td>
-							<td>{{item.bad_words_no}}</td>
-							<td><button
-									ng-click="vm.view_user_info(vm.blackList[$index])">view</button></td>
-						</tr>
-					</tbody>
-				</table>
+			<div class="title-heading">
+				<h1>JL1 Project</h1>
 			</div>
 		</div>
-		<div class="right-body-wrapper">
-			<div class="diagrams-wrapper">
-				<div id="diagram1">
-					<div class="panel">
-						<div class="panel-heading">Typical daily messages
-							({{vm.day}}/{{vm.month}}/2015)</div>
-						<div class="panel-body">
-							<canvas id="line" class="chart chart-line" chart-data="data1"
-								chart-labels="labels1" chart-legend="true"
-								chart-series="series1" chart-click="onClick"></canvas>
-						</div>
-					</div>
-					<div class="panel">
-						<div class="panel-heading">Typical weekly messages from
-							{{labels2[0]}} to {{labels2[6]}}</div>
-						<div class="panel-body">
-							<canvas id="line" class="chart chart-line" chart-data="data2"
-								chart-labels="labels2" chart-legend="true"
-								chart-series="series2" chart-click="onClick"></canvas>
 
-							</canvas>
-						</div>
-					</div>
-					<div class="panel">
-						<div class="panel-heading">User type distribution</div>
-						<div class="panel-body">
-							<canvas id="base" class="chart-polar-area" chart-type="type3"
-								chart-data="data3" chart-labels="labels3" chart-legend="true"
-								chart-click="">
-				</canvas>
-						</div>
-					</div>
-					<button ng-click="toggle()">click me</button>
+		<div class="body-wrapper">
+			<div class="controller-wrapper">
+
+				<label>Country</label> <input type="text" ng-model="vm.country" /><label>Month</label>
+				<input type="text" ng-model="vm.month" /><label>Day</label> <input
+					type="text" ng-model="vm.day" /> <label>Hour</label> <input
+					type="text" ng-model="vm.hour" />
+				<button ng-click="vm.grabData()">search</button>
+			</div>
+			<div class="left-body-wrapper">
+
+				<!--bounds="[[-37.82238533,145.17729459],[-37.42238533,145.57729459]]"-->
+				<div class="map-wrapper">
+					<ng-map zoom="8" center="[-37.82238533,145.17729459]"> <shape
+						id="foo" name="rectangle" editable="true" draggable="true"
+						bounds="[[-37.82238533,145.17729459],[-37.42238533,145.57729459]]"
+						on-bounds_changed="vm.boundsChanged()"> </shape> <custom-marker
+						position="[{{p[0]}}, {{p[1]}}]" ng-repeat="p in vm.positions">
+					<div class="cm"></div>
+					</custom-marker> </ng-map>
+				</div>
+				<div class="black-list-wrapper">
+					<table>
+						<thead>
+							<th>rank</th>
+							<th>userID</th>
+							<th>weight</th>
+							<th>view</th>>
+						</thead>
+						<tbody>
+							<tr ng-repeat="item in vm.blackList track by $index">
+								<td>{{$index}}</td>
+								<td>{{item.id_str}}</td>
+								<td>{{item.bad_words_no}}</td>
+								<td><button
+										ng-click="vm.view_user_info(vm.blackListData[$index])">view</button></td>
+							</tr>
+						</tbody>
+					</table>
+					<button ng-click="vm.view_all_user_info()">view ALl</button>
 				</div>
 			</div>
+			<div class="right-body-wrapper">
+				<div class="diagrams-wrapper">
+					<div id="diagram1">
+						<div class="panel">
+							<div class="panel-heading">Typical daily messages
+								({{vm.day}}/{{vm.month}}/2015)</div>
+							<div class="panel-body">
+								<canvas id="line" class="chart chart-line" chart-data="data1"
+									chart-labels="labels1" chart-legend="true"
+									chart-series="series1" chart-click="onClick"></canvas>
+							</div>
+						</div>
+						<div class="panel">
+							<div class="panel-heading">Typical weekly messages from
+								{{labels2[0]}} to {{labels2[6]}}</div>
+							<div class="panel-body">
+								<canvas id="line" class="chart chart-line" chart-data="data2"
+									chart-labels="labels2" chart-legend="true"
+									chart-series="series2" chart-click="onClick"></canvas>
+
+								</canvas>
+							</div>
+						</div>
+						<div class="panel">
+							<div class="panel-heading">User type distribution</div>
+							<div class="panel-body">
+								<canvas id="base" class="chart-polar-area" chart-type="type3"
+									chart-data="data3" chart-labels="labels3" chart-legend="true"
+									chart-click="">
+				</canvas>
+							</div>
+						</div>
+						<button ng-click="toggle()">click me</button>
+					</div>
+				</div>
+
+			</div>
+
 
 		</div>
-
-
 	</div>
-
 
 
 
