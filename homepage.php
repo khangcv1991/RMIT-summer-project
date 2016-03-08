@@ -30,6 +30,28 @@ if (function_exists ( $_GET ['f'] )) {
 // get_user_info("data/Australia/keepedEngTweets_statuses.log.2014-02-01-00.xz.json",array());
 // grab ();
 // echo json_encode ( getTwitterListByFile ( "data/United States/keepedEngTweets_statuses.log.2014-02-01-00.xz.json" ) );
+function get_friend_network() {
+	
+	$user_id = $_GET['user_id'] ;
+	global $root_folder;
+	$dir = "data/" . $root_folder . "/user/";
+	$locations = array ();
+	$data_str = file_get_contents ( $dir . $user_id . ".json" );
+	$data_json = json_decode ( $data_str, true );
+	$friends = $data_json ["friends"];
+	$count = 0;
+	//echo json_encode($friends);
+	foreach ( $friends as $friend ) {
+		$tmp_str = file_get_contents ( $dir . $friend . ".json" );
+		$tmp_json = json_decode ( $tmp_str, true );
+		//echo json_encode($tmp_json ["location"]);
+		if (count ( $tmp_json ["location"] ) > 0) {
+			$locations[$count ++ ] =  $tmp_json ["location"][0] ;
+		}
+	}
+	echo json_encode($locations);
+	
+}
 /**
  * **bad word analysis****
  */
@@ -43,7 +65,7 @@ function create_file($file_name, $root_folder) {
 function write_bad_people_list() {
 	global $root_folder;
 	$dir = "data/" . $root_folder . "/user/";
-	echo $dir;
+	
 	$list = array ();
 	$list ['users'] = array ();
 	$list ['location'] = array ();
@@ -197,7 +219,7 @@ function get_user_info($filename, &$list) {
 		// error opening the file.
 	}
 }
-function get_user_message_list() {
+function initate_user_data() {
 	// each item in the list <user_id, message, lastest location, weight>
 	global $root_folder;
 	$list = array ();

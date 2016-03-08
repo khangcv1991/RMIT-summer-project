@@ -1,1 +1,1 @@
-{"messages":["Is this a test ?"],"messages_no":1,"bad_words":[],"bad_words_no":0,"weight":0,"location":[[42.81109503,-72.58477203]]}
+{"messages":["Is this a test ?","Is this a test ?","Is this a test ?"],"messages_no":3,"bad_words":[],"bad_words_no":0,"weight":0,"location":[[42.81109503,-72.58477203],[42.81109503,-72.58477203],[42.81109503,-72.58477203]],"friends":[1,2,3,4]}

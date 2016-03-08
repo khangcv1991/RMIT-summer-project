@@ -4,6 +4,7 @@
 <head>
 <title>JL1</title>
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+
 <script
 	src="https://maps.google.com/maps/api/js?libraries=placeses,visualization,drawing,geometry,places"></script>
 <script src="https://code.angularjs.org/1.3.15/angular.js"></script>
@@ -14,11 +15,13 @@
 	src="https://rawgit.com/allenhwkim/angularjs-google-maps/master/testapp/scripts/markerclusterer.js"></script>
 <script src="angular-chart.js/Chart.min.js"></script>
 <script src="angular-chart.js/angular-chart.js"></script>
-
+<script src="js/ui-bootstrap-tpls.js"></script>
+<script src="js/rzslider.js"></script>
 <link rel="stylesheet" href="angular-chart.js/angular-chart.css">
 <link href="css/back-ground.css" rel="stylesheet" />
+<link rel="stylesheet" href="css/rzslider.css" />
 <script>
-var app = angular.module('myApp', ['ngMap','chart.js']);
+var app = angular.module('myApp', ['ngMap','chart.js','rzModule', 'ui.bootstrap']);
 
 app.controller('mCtrl', function($http, $interval, NgMap,$scope) {
 	//chart 1
@@ -63,6 +66,7 @@ app.controller('mCtrl', function($http, $interval, NgMap,$scope) {
 	  vm.hour;
 	  vm.positions = [];
 	  vm.markerCollection = [];
+	  
 	  vm.getCenterPosition = function(){
 		  vm.cen_pos = vm.map.getCenter();
 		  vm.cen_pos_lat = vm.cen_pos.lat();
@@ -240,11 +244,12 @@ app.controller('mCtrl', function($http, $interval, NgMap,$scope) {
 	  				}	
 	  			}
 	  		}
+	        vm.test2 = ne_lat + "" + ne_lng + "" +sw_lat + "" + sw_lng;
 	        //black list on bound changed
 	        vm.blackList=[];
 	        var tmp_count = 0;
 	        for( i = 0; i < vm.blackListData.length; i ++){
-	        	if(tmp_count == 100)
+	        	if(tmp_count == 10)
 	        		break;
 	        	
 	        	for(j = 0; j < vm.blackListData[i].location.length; j++){
@@ -269,12 +274,210 @@ app.controller('mCtrl', function($http, $interval, NgMap,$scope) {
 	    }	    
      
    });
-   vm.get_black_list() ;  
+	    
+  //selected area option
+  vm.isSelectedArea = false;
   
-    vm.test_lat = -37.82238533;
-    vm.fun_test = function(){
-    	vm.test_lat =37.02238533;
-    }
+  vm.recPathCoordinates = [
+                              {lat: -37.82238533, lng: 145.17729459},
+                              {lat: -37.42238533, lng: 145.17729459},
+                              {lat: -37.42238533, lng: 145.57729459},
+                              {lat: -37.82238533, lng: 145.57729459}
+                            ];
+  vm.rectangle  = null;
+  
+  vm.enableSelArea = function(){
+	  if(vm.isSelectedArea == false){
+		  var i;
+		  for( i = 0; i < 10; i++)
+		  	vm.blackList[i] = vm.blackListData[i];
+		  if(vm.rectangle == null)
+			  return;
+		  vm.rectangle.setMap(null);
+		  vm.rectangle = null;
+		 return;
+	  }
+	 /*
+	  vm.getCenterPosition = function(){
+	  vm.cen_pos = vm.map.getCenter();
+	  vm.cen_pos_lat = vm.cen_pos.lat();
+	  vm.cen_pos_lng = vm.cen_pos.lng();
+  }
+  
+	 */
+	 vm.getCenterPosition();
+	 vm.recPathCoordinates = [];
+	 var tmp = {lat: vm.cen_pos_lat - 0.4, lng: vm.cen_pos_lng -0.4};
+	 vm.recPathCoordinates.push(tmp);
+	  tmp = {lat: vm.cen_pos_lat + 0.4, lng: vm.cen_pos_lng -0.4};
+	 vm.recPathCoordinates.push(tmp);
+	 tmp = {lat: vm.cen_pos_lat + 0.4, lng: vm.cen_pos_lng +0.4};
+	 vm.recPathCoordinates.push(tmp);
+	 tmp = {lat: vm.cen_pos_lat - 0.4, lng: vm.cen_pos_lng +0.4};
+	 vm.recPathCoordinates.push(tmp);
+	 
+	  vm.rectangle = new google.maps.Polygon({
+		    path: vm.recPathCoordinates,
+		    strokeColor: '#FF0000',
+		    strokeOpacity: 1.0,
+		    strokeWeight: 8,
+		    
+		    draggable: true,
+		    geodesic: true
+		  });
+	  google.maps.event.addListener(vm.rectangle, "dragend", function(){
+		  /*
+	      var vertices = vm.rectangle.getPath();
+	      for (var i =0; i < vertices.getLength(); i++) {
+	    	    var xy = vertices.getAt(i);
+	    	    vm.test += '<br>' + 'Coordinate ' + i + ':<br>' + xy.lat() + ',' +
+	    	        xy.lng();
+	    	  }
+          
+         */
+		//black list on bound changed
+			var ne_lat ;
+	        var ne_lng ;
+	        var sw_lat ;
+	        var sw_lng ;
+			var vertices = vm.rectangle.getPath();
+         	var xy = vertices.getAt(0);
+         	
+         	sw_lng = xy.lng();
+         	xy = vertices.getAt(1);
+         	ne_lat = xy.lat();
+         	xy = vertices.getAt(vertices.getLength() - 1);
+         	sw_lat  = xy.lat();
+         	
+         	ne_lng = xy.lng();
+	        vm.blackList=[];
+	        var tmp_count = 0;
+	        
+	        for( i = 0; i < vm.blackListData.length; i ++){
+	        	if(tmp_count == 10)
+	        		break;
+	        	
+	        	for(j = 0; j < vm.blackListData[i].location.length; j++){
+		        	if(parseFloat( vm.blackListData[i].location[j][0]) < ne_lat && parseFloat( vm.blackListData[i].location[j][0])> sw_lat){
+			        	if(parseFloat( vm.blackListData[i].location[j][1]) > sw_lng &&  parseFloat(vm.blackListData[i].location[j][1]) < ne_lng ){
+		  					vm.blackList.push( vm.blackListData[i]);
+		  					break;
+		  				}
+		        	}
+	        	}
+	        }
+          
+        });
+	 
+  
+  }
+ 
+  $interval(function(){ vm.refresh(); }, 2000);
+  vm.refresh = function () {
+	 // vm.mSlider_change();
+	  vm.rectangle.setMap(vm.map);
+	  
+  }
+  
+   vm.get_black_list() ;  
+   //slider
+   $scope.mSlider ={
+		    value: 100
+   };
+   $scope.$watch('mSlider.value', function (val){
+	   var vertices = vm.rectangle.getPath();
+	      for (var i =0; i < vertices.getLength(); i++) {
+	    	    var xy = vertices.getAt(i);
+	    	    vm.test += '<br>' + 'Coordinate ' + i + ':<br>' + xy.lat() + ',' +
+	    	        xy.lng();
+	    	  }
+	     var newPath = [];
+	     
+	     var tmp_point = vertices.getAt(0);
+	     var tmp_object = {lat: tmp_point.lat()  - val/10, lng: tmp_point.lng() -val/10}
+	     newPath.push(tmp_object);
+	     tmp_point = vertices.getAt(1);
+	     tmp_object = {lat: tmp_point.lat() + val/10, lng: tmp_point.lng() - val/10}
+	     newPath.push(tmp_object);
+	     tmp_point = vertices.getAt(2);
+	     tmp_object = {lat: tmp_point.lat() + val/10, lng: tmp_point.lng() + val/10}
+	     newPath.push(tmp_object);
+	     
+	     tmp_point = vertices.getAt(3);
+	     tmp_object = {lat: tmp_point.lat() - val/10, lng: tmp_point.lng() + val/10}
+	     newPath.push(tmp_object);
+	     
+	     vm.rectangle.setPath(newPath);
+	     $scope.mSlider.value = 100;
+   });
+   vm.mSlider_change = function(){
+	   var vertices = vm.rectangle.getPath();
+	      for (var i =0; i < vertices.getLength(); i++) {
+	    	    var xy = vertices.getAt(i);
+	    	    vm.test += '<br>' + 'Coordinate ' + i + ':<br>' + xy.lat() + ',' +
+	    	        xy.lng();
+	    	  }
+	     var newPath = [];
+	     
+	     var tmp_point = vertices.getAt(0);
+	     var tmp_object = {lat: tmp_point.lat() - $scope.mSlider.value/10, lng: tmp_point.lng() - $scope.mSlider.value/10}
+	     newPath.push(tmp_object);
+	     tmp_point = vertices.getAt(1);
+	     tmp_object = {lat: tmp_point.lat() + $scope.mSlider.value/10, lng: tmp_point.lng() - $scope.mSlider.value/10}
+	     newPath.push(tmp_object);
+	     tmp_point = vertices.getAt(2);
+	     tmp_object = {lat: tmp_point.lat() + $scope.mSlider.value/10, lng: tmp_point.lng() + $scope.mSlider.value/10}
+	     newPath.push(tmp_object);
+	     
+	     tmp_point = vertices.getAt(3);
+	     tmp_object = {lat: tmp_point.lat() - $scope.mSlider.value/10, lng: tmp_point.lng() + $scope.mSlider.value/10}
+	     newPath.push(tmp_object);
+	     
+	     vm.rectangle.setPath(newPath);
+   }
+    
+   vm.friend_polygon = null;
+   vm.get_network = function(user_id){
+		
+	  	$http({
+	  		//url:"http://localhost:8080/SVN_REPOSIBILITY_HTDOCS/SummerProject/homepage.php?f=grab",
+	  		url:"homepage.php?f=get_friend_network&user_id=" + user_id ,
+	  		method: "GET",
+	  		params:{
+	  			date:''
+	  		}
+	  		
+	  	}).success(function(data,status,header,config){
+	  		
+	  		
+	  		vm.friend_path = [];
+	  		var i = 0;
+	  		var bounds = new google.maps.LatLngBounds();
+	  		for(i = 0; i < data.length; i++){
+	  			var tmp =   {lat: data[i][0] + 0.4, lng: data[i][1]};
+	  			vm.friend_path.push(tmp);
+	  			//bounds.extend(tmp);
+	  		}
+	  		if(vm.friend_polygon == null){
+		  		 vm.friend_polygon =   new google.maps.Polygon({
+		 		    path: vm.friend_path,
+		 		    strokeColor: '#FF0000',
+		 		    strokeOpacity: 1.0,
+		 		    strokeWeight: 8,
+		 		    
+		 		    draggable: false,
+		 		    geodesic: true
+		 		  });
+		  		 
+		  		vm.friend_polygon.setMap(vm.map);
+	  		}else{
+	  			vm.friend_polygon.setMap(null);
+	  			vm.friend_polygon = null;
+	  		}
+	  	})
+	  	.error(function(data,status,header,config){});
+	  }
+   
 });
 </script>
 </head>
@@ -294,22 +497,38 @@ app.controller('mCtrl', function($http, $interval, NgMap,$scope) {
 		</div>
 
 		<div class="body-wrapper">
-			<div class="controller-wrapper">
+			<div ng-if="vm.isSelectedArea">
+				<rzslider rz-slider-model="mSlider.value"></rzslider>
 
-				<label>Country</label> <input type="text" ng-model="vm.country" /><label>Month</label>
-				<input type="text" ng-model="vm.month" /><label>Day</label> <input
-					type="text" ng-model="vm.day" /> <label>Hour</label> <input
-					type="text" ng-model="vm.hour" />
-				<button ng-click="vm.grabData()">search</button>
+			</div>
+			<div class="controller-wrapper">
+				<div class="text-controller">
+					<label>Country</label> <input type="text" ng-model="vm.country" /><label>Month</label>
+					<input type="text" ng-model="vm.month" /><label>Day</label> <input
+						type="text" ng-model="vm.day" /> <label>Hour</label> <input
+						type="text" ng-model="vm.hour" />
+					<button ng-click="vm.grabData()">search</button>
+				</div>
+
+
+				<div class="checkbox-controller">
+					<ul>
+						<li class="control-inline"><input type="checkbox"
+							ng-model="vm.isSelectedArea" ng-change="vm.enableSelArea()"
+							id="selected-area" /><label for="selected-area">Selected
+								Area</label></li>
+
+
+					</ul>
+
+				</div>
+
 			</div>
 			<div class="left-body-wrapper">
 
 				<!--bounds="[[-37.82238533,145.17729459],[-37.42238533,145.57729459]]"-->
 				<div class="map-wrapper">
-					<ng-map zoom="8" center="[-37.82238533,145.17729459]"> <shape
-						id="foo" name="rectangle" editable="true" draggable="true"
-						bounds="[[-37.82238533,145.17729459],[-37.42238533,145.57729459]]"
-						on-bounds_changed="vm.boundsChanged()"> </shape> <custom-marker
+					<ng-map zoom="8" center="[-37.82238533,145.17729459]"> <custom-marker
 						position="[{{p[0]}}, {{p[1]}}]" ng-repeat="p in vm.positions">
 					<div class="cm"></div>
 					</custom-marker> </ng-map>
@@ -320,7 +539,8 @@ app.controller('mCtrl', function($http, $interval, NgMap,$scope) {
 							<th>rank</th>
 							<th>userID</th>
 							<th>weight</th>
-							<th>view</th>>
+							<th>view</th>
+							<th>friends</th>
 						</thead>
 						<tbody>
 							<tr ng-repeat="item in vm.blackList track by $index">
@@ -329,10 +549,13 @@ app.controller('mCtrl', function($http, $interval, NgMap,$scope) {
 								<td>{{item.bad_words_no}}</td>
 								<td><button
 										ng-click="vm.view_user_info(vm.blackListData[$index])">view</button></td>
+								<td><button
+										ng-click="vm.get_network(item.id_str)">friends</button></td>
+
 							</tr>
 						</tbody>
 					</table>
-					<button ng-click="vm.view_all_user_info()">view ALl</button>
+					<button ng-click="vm.view_all_user_info()">view all</button>
 				</div>
 			</div>
 			<div class="right-body-wrapper">

@@ -55,14 +55,7 @@ input{
 	width:100%;
 	float:left;
 }
-.controller-wrapper{
-	
-	height:100px;
-	padding:auto;
-	
-	margin:auto;
-	
-}
+
 .black-list-wrapper{
 	width:100%;
 	padding-bottom:250px;
@@ -118,4 +111,52 @@ input{
 	margin-left: -6px;
 	bottom: -7px;
 	left: 50%;
+}
+
+/*checkbox*/
+
+
+.checkbox-controller li { 
+ float:left;
+ list-style-type:none;
+
+ }
+ 
+ .checkbox-controller ul{
+ 	display: inline;
+    
+    -webkit-margin-before: 0em;
+    -webkit-margin-after: 0em;
+    -webkit-margin-start: 0px;
+    -webkit-margin-end: 0px;
+    -webkit-padding-start: 0px;
+ }
+  .checkbox-controller label{
+ 	display: inline;
+    -webkit-padding-after: 0px;
+    -webkit-margin-before: 0em;
+    -webkit-margin-after: 0em;
+    -webkit-margin-start: 10px;
+    -webkit-margin-end: 0px;
+    -webkit-padding-start: 0px;
+ }
+.checkbox-controller{
+	float:left;
+	height:50%;
+	width:100%;
+	overflow:auto
+}
+.text-controller{
+	float:left;
+	height:50%;
+	width:100%;
+}
+.checkbox-controller input{
+	width:30px;
+}
+.controller-wrapper{
+	
+	height:100px;
+	
+	
 }

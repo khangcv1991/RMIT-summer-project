@@ -5,9 +5,43 @@ $bad_word_list = get_words_list ();
 
 $root_folder = "United States";
 read_bad_people_list ( 1000 );
+
+//initate_user_data();
 // get_user_message_list ();
 // write_bad_people_list ();
 // get_user_message_list ();
+function add_dummy_data_for_user() {
+	// each item in the list <user_id, message, lastest location, weight>
+	global $root_folder;
+	$list = array ();
+	$dir = "data/" . $root_folder . "/"."user/";
+	
+	// Open a directory, and read its contents
+	if (is_dir ( $dir ) == true) {
+		
+		if ($dh = opendir ( $dir )) {
+			// echo "read";
+			// print_r ( readdir ( $dh ) );Ï
+			while ( ($file = readdir ( $dh )) !== false ) {
+				echo $file;
+				if ($file != "." && $file != ".." && intval($file) >= 0) {
+					/*
+					 42.080617734132, -93.26355664062498
+					 40.629301849760935, -87.70447460937498
+					 33.04404077043604, -112.13806835937498
+					 30.957267749065043, -95.293287109375
+					 */
+				}
+			}
+			
+			echo json_encode ( $list );
+			closedir ( $dh );
+			return $array;
+		} else {
+			echo "cannot open dir";
+		}
+	}
+}
 /**
  * general functions ***
  */
@@ -155,7 +189,7 @@ function data_write_json() {
 /**
  * write user information to a file which has name as user id **
  */
-function get_user_message_list() {
+function initate_user_data() {
 	// each item in the list <user_id, message, lastest location, weight>
 	global $root_folder;
 	$list = array ();
@@ -225,7 +259,8 @@ function write_user_info($user_id, $content, $root_folder) {
 				"bad_words" => array (),
 				"bad_words_no" => 0,
 				"weight" => 0,
-				"location" => array () 
+				"location" => array (),
+				"friends" => array()
 		);
 		
 		file_put_contents ( $file_name, json_encode ( $data ) );
@@ -239,6 +274,20 @@ function write_user_info($user_id, $content, $root_folder) {
 	$data ["messages_no"] = $mess_no + 1;
 	$bad_word_no = $data ['bad_words_no'];
 	$data ['bad_words_no'] = $bad_word_no + count_bad_word_in_message ( $bad_word_list, $tmp_item ['text'] );
+	//add dummy location data for user's friends
+	/*
+	 42.080617734132, -93.26355664062498
+	 40.629301849760935, -87.70447460937498
+	 33.04404077043604, -112.13806835937498
+	 30.957267749065043, -95.293287109375
+	 */
+	
+	$data ['friends'][0] = 1;
+	$data ['friends'][1] = 2;
+	$data ['friends'][2] = 3;
+	$data ['friends'][3] = 4;
+	
+	
 	
 	// $data ['location'] = $tmp_item ['geo'] ['coordinates'];
 	if ($tmp_item ['geo'] ['coordinates'] != null)
